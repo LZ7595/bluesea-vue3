@@ -1,3 +1,4 @@
+vue
 <template>
     <div class="LoginAndRegister">
         <div class="shell">
@@ -26,13 +27,11 @@
                             <span class="form_inputSpan">
                                 <input v-model="code" @input="validateCode" class="form_input code_input"
                                        placeholder="请输入验证码" type="password"/>
-                                <button class="sendEmailCode" @click.prevent="sendCode(email)">
-                                    发送验证码
-                                </button>
+                                <SendCodeBtn :email="email" />
                             </span>
                             <span class="form_tip">{{ codeError }}</span>
                         </div>
-                        </span>
+                    </span>
                     <span class="form_item">
                         <label>密码:</label>
                         <div class="form_item_content">
@@ -64,7 +63,6 @@
 
                     <transition mode="out-in" name="zoom">
                         <component :is="getComponentName"
-                                   :sendCode="sendCode"
                                    :username="username0"
                                    :password="password0"
                                    :email="email0"
@@ -136,11 +134,19 @@ export default {
 
 <script setup>
 import {computed, watch, ref} from "vue";
-import Auth from "@/request/auth.js";
+import Auth from "@/request/auth";
 import {ElMessage} from "element-plus";
-import {validateEmail, validateUsername, validatePassword, validateCode} from "../../../utils/validation.js";
+import {validateEmail, validateUsername, validatePassword, validateCode} from "@/utils/validation";
+import SendCodeBtn from "@/components/pc/login/sendCodeBtn.vue";
+import { useRoute } from 'vue-router';
+import router from "@/router/index";
+import { useUserStore } from "@/store/user";
 
-const switchBtn = ref([]);
+// 获取路由对象
+const route = useRoute();
+// 接收 route.params.action
+const action = route.params.action;
+
 const isTxr = ref(false);
 const isGx = ref(false);
 const isHidden = ref(false);
@@ -150,10 +156,10 @@ const currentComponent = ref('UserAndPassword');
 
 
 // 注册
-const username = ref('');
-const email = ref('');
+const username = ref('555');
+const email = ref('1097260541@qq.com');
 const code = ref('');
-const password = ref('');
+const password = ref('12345678');
 const usernameError = ref('');
 const emailError = ref('');
 const codeError = ref('');
@@ -170,12 +176,19 @@ const passwordError0 = ref('');
 const emailError0 = ref('');
 const codeError0 = ref('');
 
-
+if (action === 'Login') {
+    isTxr.value =!isTxr.value;
+    isHidden.value =!isHidden.value;
+    isTxl.value =!isTxl.value;
+    isZ.value =!isZ.value;
+}else if (action === 'Register') {}else {
+    router.push('/');
+}
 const changeForm = () => {
-    isTxr.value = !isTxr.value;
-    isHidden.value = !isHidden.value;
-    isTxl.value = !isTxl.value;
-    isZ.value = !isZ.value;
+    isTxr.value =!isTxr.value;
+    isHidden.value =!isHidden.value;
+    isTxl.value =!isTxl.value;
+    isZ.value =!isZ.value;
 };
 
 
@@ -203,20 +216,7 @@ const getComponentName = computed(() => {
     return currentComponent.value;
 });
 
-
-const sendCode = async (value, type = 0) => {
-    try {
-        const res = await Auth.getAuthCode({
-            email: value,
-            type: type // 假设 type 为 0 表示注册
-        });
-        console.log(res);
-    } catch (error) {
-        console.error('发送验证码失败', error);
-    }
-};
-
-
+const userStore = useUserStore();
 const onLogin = async () => {
     switch (currentIndex.value) {
         case 0: {
@@ -234,6 +234,9 @@ const onLogin = async () => {
                     password: password0.value
                 }, 'USER_PASSWORD');
                 console.log(res);
+                const data1 = res.data.data;
+                console.log(data1)
+                userStore.setUserData(data1);
                 ElMessage.success('登录成功');
             } catch (error) {
                 console.error('用户名密码登录失败', error);
@@ -256,6 +259,9 @@ const onLogin = async () => {
                     code: code0.value
                 }, 'EMAIL_VERIFICATION');
                 console.log(res);
+                const data1 = res.data.data;
+                console.log(data1)
+                userStore.setUserData(data1);
                 ElMessage.success('登录成功');
             } catch (error) {
                 console.error('邮箱验证码登录失败', error);
@@ -278,6 +284,9 @@ const onLogin = async () => {
                     password: password0.value
                 }, 'EMAIL_PASSWORD');
                 console.log(res);
+                const data1 = res.data.data;
+                console.log(data1)
+                userStore.setUserData(data1);
                 ElMessage.success('登录成功');
             } catch (error) {
                 console.error('邮箱密码登录失败', error);
@@ -290,7 +299,6 @@ const onLogin = async () => {
             console.warn('未知的登录方式');
             break;
     }
-
 };
 
 
@@ -314,25 +322,30 @@ const onRegister = async () => {
             password: password.value
         });
         console.log(res);
-        if (res.data.code === 500) {
-            switch (res.data.data.errorcode) {
-                case 'name1':
-                    usernameError.value = '该用户名已使用';
-                    break;
-                case 'email1':
-                    emailError.value = '邮箱已注册过';
-                    break;
-                case "CodeFailed":
-                    codeError.value = '验证码错误';
-                    break;
-                default:
-                    console.log(res.data.msg);
-            }
-        } else if (res.data.code === 200) {
-            ElMessage.success('注册成功');
-        }
     } catch (error) {
         console.error('注册失败', error);
+        if (error.response) {
+            // 服务器返回了响应
+            const errorData = error.response.data;
+            switch (errorData.errorcode) {
+                case 1001:
+                    // 用户名已存在
+                    usernameError.value = errorData.errormsg;
+                    break;
+                case 1002:
+                    // 邮箱已存在
+                    emailError.value = errorData.errormsg;
+                    break;
+                case 1023:
+                    // 验证码错误
+                    codeError.value = errorData.errormsg;
+                    break;
+            }
+            ElMessage.error(errorData.errormsg || '注册失败');
+        } else {
+            // 请求未完成，例如网络错误
+            ElMessage.error('网络错误，请稍后重试');
+        }
     }
 };
 
@@ -374,344 +387,333 @@ watch(password0, () => {
     font-size: 12px;
     background-color: #ecf0f3;
     color: #a0a5a8;
-}
 
-.shell {
-    position: relative;
-    width: 1000px;
-    min-width: 1000px;
-    min-height: 600px;
-    height: 600px;
-    padding: 25px;
-    background-color: #ecf0f3;
-    box-shadow: 10px 10px 10px #d1d9e6, -10px -10px 10px #f9f9f9;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-/* 设置响应式 */
-@media (max-width: 1200px) {
     .shell {
-        transform: scale(0.7);
-    }
-}
-
-@media (max-width: 1000px) {
-    .shell {
-        transform: scale(0.6);
-    }
-}
-
-@media (max-width: 800px) {
-    .shell {
-        transform: scale(0.5);
-    }
-}
-
-@media (max-width: 600px) {
-    .shell {
-        transform: scale(0.4);
-    }
-}
-
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    top: 0;
-    width: 600px;
-    height: 100%;
-    padding: 25px;
-    background-color: #ecf0f3;
-    transition: 1.25s;
-}
-
-.form {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-
-    label {
-        display: inline-block;
-        font-size: 14px;
-        font-weight: 500;
-        width: 60px;
-        text-align: left;
+        position: relative;
+        width: 1000px;
+        min-width: 1000px;
+        min-height: 600px;
+        height: 600px;
+        padding: 25px;
+        background-color: #ecf0f3;
+        box-shadow: 10px 10px 10px #d1d9e6, -10px -10px 10px #f9f9f9;
+        border-radius: 12px;
+        overflow: hidden;
     }
 
-    .form_item_content {
-        display: inline-flex;
-        flex-direction: column;
-
-        .form_tip {
-            width: 100%;
-            height: 20px;
-            color: red;
+    /* 设置响应式 */
+    @media (max-width: 1200px) {
+        .shell {
+            transform: scale(0.7);
         }
     }
 
-    .type_select_div {
+    @media (max-width: 1000px) {
+        .shell {
+            transform: scale(0.6);
+        }
+    }
+
+    @media (max-width: 800px) {
+        .shell {
+            transform: scale(0.5);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .shell {
+            transform: scale(0.4);
+        }
+    }
+
+    .container {
         display: flex;
-        align-items: center;
         justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        width: 600px;
+        height: 100%;
+        padding: 25px;
+        background-color: #ecf0f3;
+        transition: 1.25s;
+    }
+
+    .form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         flex-direction: column;
         width: 100%;
-    }
-
-    .submit {
-        margin-top: 20px;
-    }
-}
-
-.zoom-enter-active,
-.zoom-leave-active {
-    transition: all 0.4s ease;
-}
-
-.zoom-enter,
-.zoom-leave-to {
-    opacity: 0;
-    transform: translateX(150px)
-}
-
-.form_input {
-    width: 280px;
-    height: 40px;
-    margin: 4px 0;
-    padding-left: 25px;
-    font-size: 13px;
-    letter-spacing: 0.15px;
-    border: none;
-    outline: none;
-    background-color: #ecf0f3;
-    transition: 0.25s ease;
-    border-radius: 8px;
-    box-shadow: inset 2px 2px 4px #d1d9e6, inset -2px -2px 4px #f9f9f9;
-}
-
-.form_input::placeholder {
-    font-size: 12px;
-}
-
-.form_input:focus,
-.email_input:focus {
-    box-shadow: inset 4px 4px 4px #d1d9e6, inset -4px -4px 4px #f9f9f9;
-}
-
-.email_input {
-    background-color: rgba(255, 255, 255, 0);
-}
-
-.email_input:focus {
-    outline: none;
-    border: none;
-}
-
-.code_input {
-    width: 190px;
-}
-
-.sendEmailCode {
-    width: 80px;
-    height: 40px;
-    margin-left: 10px;
-    border-radius: 5px;
-    background: #5a99dc;
-    color: #fff;
-    font-size: 12px;
-    font-weight: bold;
-    box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
-}
-
-.sendEmailCode:hover {
-    opacity: 0.7;
-}
-
-.type_select {
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-    width: 210px;
-    height: 36px;
-    margin: 0 3px 15px;
-    background: #d7e1e9;
-    border-radius: 18px;
-
-    span {
-        cursor: pointer;
-        display: inline-flex;
-        box-sizing: border-box;
-        align-items: center;
-        width: 70px;
-        padding: 0 5px;
         height: 100%;
+
+        label {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 500;
+            width: 60px;
+            text-align: left;
+        }
+
+        .form_item_content {
+            display: inline-flex;
+            flex-direction: column;
+
+            .form_inputSpan {
+                display: flex;
+                align-items: center;
+            }
+
+            .form_tip {
+                width: 100%;
+                height: 20px;
+                color: red;
+            }
+        }
+
+        .type_select_div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .submit {
+            margin-top: 20px;
+        }
+    }
+
+    .zoom-enter-active,
+    .zoom-leave-active {
+        transition: all 0.4s ease;
+    }
+
+    .zoom-enter,
+    .zoom-leave-to {
+        opacity: 0;
+        transform: translateX(150px)
+    }
+
+    .form_input {
+        width: 280px;
+        height: 40px;
+        margin: 4px 0;
+        padding-left: 25px;
+        font-size: 13px;
+        letter-spacing: 0.15px;
+        border: none;
+        outline: none;
+        background-color: #ecf0f3;
+        transition: 0.25s ease;
+        border-radius: 8px;
+        box-shadow: inset 2px 2px 4px #d1d9e6, inset -2px -2px 4px #f9f9f9;
+    }
+
+    .form_input::placeholder {
+        font-size: 12px;
+    }
+
+    .form_input:focus,
+    .email_input:focus {
+        box-shadow: inset 4px 4px 4px #d1d9e6, inset -4px -4px 4px #f9f9f9;
+    }
+
+    .email_input {
+        background-color: rgba(255, 255, 255, 0);
+    }
+
+    .email_input:focus {
+        outline: none;
+        border: none;
+    }
+
+    .code_input {
+        width: 190px;
+    }
+
+    .type_select {
+        box-sizing: border-box;
+        display: flex;
+        justify-content: space-between;
+        width: 210px;
+        height: 36px;
+        margin: 0 3px 15px;
+        background: #d7e1e9;
         border-radius: 18px;
+
+        span {
+            cursor: pointer;
+            display: inline-flex;
+            box-sizing: border-box;
+            align-items: center;
+            width: 70px;
+            padding: 0 5px;
+            height: 100%;
+            border-radius: 18px;
+            text-align: center;
+            justify-content: center;
+        }
+
+        span.active {
+            background: #5a99dc;
+            color: #fff;
+            transition: all 0.5s ease-in-out;
+        }
+    }
+
+    .form_link {
+        color: #181818;
+        font-size: 15px;
+        border-bottom: 1px solid #a0a5a8;
+        line-height: 2;
+    }
+
+    .title {
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 3;
+        color: #181818;
+        letter-spacing: 10px;
+    }
+
+    .description {
+        font-size: 14px;
+        letter-spacing: 0.25px;
         text-align: center;
+        line-height: 1.6;
+    }
+
+    .button {
+        width: 180px;
+        height: 50px;
+        border-radius: 25px;
+        margin-top: 50px;
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 1.15px;
+        background-color: #4b70e2;
+        color: #f9f9f9;
+        box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+        border: none;
+        outline: none;
+    }
+
+    .a-container {
+        z-index: 100;
+        left: calc(100% - 600px);
+    }
+
+    .b-container {
+        left: calc(100% - 600px);
+        z-index: 0;
+    }
+
+    .switch {
+        display: flex;
         justify-content: center;
-    }
-
-    span.active {
-        background: #5a99dc;
-        color: #fff;
-        transition: all 0.5s ease-in-out;
-    }
-}
-
-.form_link {
-    color: #181818;
-    font-size: 15px;
-    border-bottom: 1px solid #a0a5a8;
-    line-height: 2;
-}
-
-.title {
-    font-size: 34px;
-    font-weight: 700;
-    line-height: 3;
-    color: #181818;
-    letter-spacing: 10px;
-}
-
-.description {
-    font-size: 14px;
-    letter-spacing: 0.25px;
-    text-align: center;
-    line-height: 1.6;
-}
-
-.button {
-    width: 180px;
-    height: 50px;
-    border-radius: 25px;
-    margin-top: 50px;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 1.15px;
-    background-color: #4b70e2;
-    color: #f9f9f9;
-    box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
-    border: none;
-    outline: none;
-}
-
-.a-container {
-    z-index: 100;
-    left: calc(100% - 600px);
-}
-
-.b-container {
-    left: calc(100% - 600px);
-    z-index: 0;
-}
-
-.switch {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 400px;
-    padding: 50px;
-    z-index: 200;
-    transition: 1.25s;
-    background-color: #ecf0f3;
-    overflow: hidden;
-    box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #d1d9e6;
-}
-
-.switch_circle {
-    position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background-color: #ecf0f3;
-    box-shadow: inset 8px 8px 12px #b8bec7, inset -8px -8px 12px #fff;
-    bottom: -60%;
-    left: -60%;
-    transition: 1.25s;
-}
-
-.switch_circle-t {
-    top: -30%;
-    left: 60%;
-    width: 300px;
-    height: 300px;
-}
-
-.switch_container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    position: absolute;
-    width: 400px;
-    padding: 50px 55px;
-    transition: 1.25s;
-}
-
-.switch_button {
-    cursor: pointer;
-}
-
-.switch_button:hover,
-.submit:hover {
-    box-shadow: 6px 6px 10px #d1d9e6, -6px -6px 10px #f9f9f9;
-    transform: scale(0.985);
-    transition: 0.25s;
-}
-
-.switch_button:active,
-.switch_button:focus {
-    box-shadow: 2px 2px 6px #d1d9e6, -2px -2px 6px #f9f9f9;
-    transform: scale(0.97);
-    transition: 0.25s;
-}
-
-.is-txr {
-    left: calc(100% - 400px);
-    transition: 1.25s;
-    transform-origin: left;
-}
-
-.is-txl {
-    left: 0;
-    transition: 1.25s;
-    transform-origin: right;
-}
-
-.is-z {
-    z-index: 200;
-    transition: 1.25s;
-}
-
-.is-hidden {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    transition: 1.25s;
-}
-
-.is-gx {
-    animation: is-gx 1.25s;
-}
-
-@keyframes is-gx {
-
-    0%,
-    10%,
-    100% {
+        align-items: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
         width: 400px;
+        padding: 50px;
+        z-index: 200;
+        transition: 1.25s;
+        background-color: #ecf0f3;
+        overflow: hidden;
+        box-shadow: 4px 4px 10px #d1d9e6, -4px -4px 10px #d1d9e6;
     }
 
-    30%,
-    50% {
+    .switch_circle {
+        position: absolute;
         width: 500px;
+        height: 500px;
+        border-radius: 50%;
+        background-color: #ecf0f3;
+        box-shadow: inset 8px 8px 12px #b8bec7, inset -8px -8px 12px #fff;
+        bottom: -60%;
+        left: -60%;
+        transition: 1.25s;
+    }
+
+    .switch_circle-t {
+        top: -30%;
+        left: 60%;
+        width: 300px;
+        height: 300px;
+    }
+
+    .switch_container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        position: absolute;
+        width: 400px;
+        padding: 50px 55px;
+        transition: 1.25s;
+    }
+
+    .switch_button {
+        cursor: pointer;
+    }
+
+    .switch_button:hover,
+    .submit:hover {
+        box-shadow: 6px 6px 10px #d1d9e6, -6px -6px 10px #f9f9f9;
+        transform: scale(0.985);
+        transition: 0.25s;
+    }
+
+    .switch_button:active,
+    .switch_button:focus {
+        box-shadow: 2px 2px 6px #d1d9e6, -2px -2px 6px #f9f9f9;
+        transform: scale(0.97);
+        transition: 0.25s;
+    }
+
+    .is-txr {
+        left: calc(100% - 400px);
+        transition: 1.25s;
+        transform-origin: left;
+    }
+
+    .is-txl {
+        left: 0;
+        transition: 1.25s;
+        transform-origin: right;
+    }
+
+    .is-z {
+        z-index: 200;
+        transition: 1.25s;
+    }
+
+    .is-hidden {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        transition: 1.25s;
+    }
+
+    .is-gx {
+        animation: is-gx 1.25s;
+    }
+
+    @keyframes is-gx {
+
+        0%,
+        10%,
+        100% {
+            width: 400px;
+        }
+
+        30%,
+        50% {
+            width: 500px;
+        }
     }
 }
 </style>

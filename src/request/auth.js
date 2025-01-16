@@ -1,5 +1,4 @@
-import request from '@/request/request.js';
-import axios from "axios";
+import request from '@/request/request';
 
 const Auth = {
     //验证码

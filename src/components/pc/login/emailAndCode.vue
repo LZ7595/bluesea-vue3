@@ -16,9 +16,7 @@
                                                :value="localCode"
                                                @input="handleCodeInput"
                                                placeholder="请输入验证码" type="text"/>
-                                        <button class="sendEmailCode" @click.prevent="sendCode(localEmail,1)">
-                                            发送验证码
-                                        </button>
+                                        <SendCodeBtn :email="localEmail" :type="1" />
                                     </span>
                                     <span class="form_tip">{{codeError}}</span>
                                 </div>
@@ -29,14 +27,10 @@
 <script setup>
 import {defineOptions, defineProps, ref} from 'vue';
 import {validateCode, validateEmail} from "../../../utils/validation.js";
+import SendCodeBtn from "@/components/pc/login/sendCodeBtn.vue";
 
 defineOptions({name: 'emailAndCode'});
 const props = defineProps({
-    sendCode: {
-        type: Function,
-        default: () => {
-        }
-    },
     email: {
         type: String,
         default: ''

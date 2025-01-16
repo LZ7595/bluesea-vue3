@@ -4,10 +4,10 @@
             <div class="pc-home-title">
                 <ul class="pc-home-title-ul">
                     <li
-                            v-for="(item, index) in categories"
-                            :key="index"
-                            :class="{ active: activeIndex === index }"
-                            @click="changeActiveIndex(index)"
+                        v-for="(item, index) in categories"
+                        :key="index"
+                        :class="{ active: activeIndex === index }"
+                        @click="changeActiveIndex(index)"
                     >
                         {{ item }}
                     </li>
@@ -72,14 +72,18 @@
 </style>
 
 <script setup>
-import {ref} from 'vue';
-import {useRouter} from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 
 const categories = ref(['推荐', '苹果', '安卓', '平板', '电脑', '生活']);
-const activeIndex = ref(0);
 const router = useRouter();
+const route = useRoute();
+
+const activeIndex = computed(() => {
+    return categories.value.findIndex(category => category === route.name);
+});
+
 const changeActiveIndex = (index) => {
-    activeIndex.value = index;
-    router.push({name: categories.value[index]});
+    router.push({ name: categories.value[index] });
 };
 </script>

@@ -1,13 +1,15 @@
 <template>
     <div class="goodItem">
-        <router-link class="picbox">
-            <img :src="img" :alt="title" class="goodItem-img">
+        <router-link class="picbox" :to="`/pc/productDetails/${product_id}`">
+            <img :src="image_url" :alt="product_name" class="goodItem-img">
         </router-link>
         <div class="title">
-            <router-link>{{ quality + "新 " + title }}</router-link>
+            <router-link :to="`/pc/productDetails/${product_id}`">{{ quality + "新 " + product_name }}</router-link>
         </div>
         <div class="price">
-            <router-link>￥{{ price }}</router-link>
+            <router-link :to="`/pc/productDetails/${product_id}`">￥{{ price }}</router-link>
+            <!-- 如果有折扣，显示限时抢购提示 -->
+            <el-tag v-if="hasDiscount" type="danger" effect="dark" size="small">限时抢购</el-tag>
         </div>
         <div class="goodItem-bottom">
             <button class="addCart">加入购物车</button>
@@ -18,7 +20,8 @@
 </template>
 
 <script setup>
-import {defineOptions, defineProps, toRefs} from 'vue';
+import {computed, defineOptions, defineProps, toRefs} from 'vue';
+import {getFirstImageUrl, getImageUrlArray} from "@/utils/imgArray.js";
 
 const props = defineProps({
     goodItem: {
@@ -27,7 +30,12 @@ const props = defineProps({
     }
 })
 
-const {id, img, title, price, quality} = toRefs(props.goodItem)
+const {product_id, product_name, quality} = toRefs(props.goodItem.product)
+const imageUrlArray = computed(() => getImageUrlArray(props.goodItem.product));
+const image_url = computed(() => getFirstImageUrl(imageUrlArray.value));
+const price = computed(() => props.goodItem.flashSale ? props.goodItem.flashSale.discount_price : props.goodItem.product.price);
+// 计算属性判断是否有折扣
+const hasDiscount = computed(() => props.goodItem.flashSale && props.goodItem.flashSale.discount_price);
 
 defineOptions({
     name: 'goodItem'
@@ -43,6 +51,8 @@ defineOptions({
 
     .picbox {
         display: block;
+        width: 231px;
+        height: 231px;
         padding: 20px;
     }
 
@@ -62,7 +72,8 @@ defineOptions({
         a {
             line-height: 18px;
         }
-        a:hover{
+
+        a:hover {
             color: #5a99dc;
         }
     }
@@ -71,6 +82,9 @@ defineOptions({
         padding: 0 10px;
         font-size: 18px;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
 
         a {
             color: #e4393c;

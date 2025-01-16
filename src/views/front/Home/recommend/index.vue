@@ -13,7 +13,7 @@
             <div class="pc-home-content-top-right">
                 <div class="pc-home-content-FlashSale">
                     <div class="FlashSale-title">
-                        <img src="../../../../../public/icon/时间.png" class="FlashSale-title-img" alt="时间"/>
+                        <img src="/icon/时间.png" class="FlashSale-title-img" alt="时间"/>
                         <h2 class="FlashSale-title-font">限时
                             <o>抢</o>
                             购
@@ -21,19 +21,21 @@
                     </div>
                     <div class="FlashSale-content">
                         <ul>
-                            <li class="FlashSale-content-item" v-for="(item,index) in FlashSaleList"
-                                :key="index">
-                                <div class="FlashSale-content-item-content">
-                                    <img :src="item.img" :alt="item.title" class="FlashSale-content-item-img"/>
-                                    <div class="FlashSale-content-item-info">
-                                        <h3 class="FlashSale-content-item-info-title">{{ item.title }}</h3>
-                                        <GoodQuality :text="item.quality"/>
+                            <li class="FlashSale-content-item" v-for="(item,index) in FlashSaleList" :key="index">
+                                <router-link :to="`/pc/productDetails/${item.product_id}`">
+                                    <div class="FlashSale-content-item-content">
+                                        <img :src="item.img" :alt="item.product_name"
+                                             class="FlashSale-content-item-img"/>
+                                        <div class="FlashSale-content-item-info">
+                                            <h3 class="FlashSale-content-item-info-title">{{ item.product_name }}</h3>
+                                            <GoodQuality :text="item.quality"/>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="FlashSale-content-item-price">
-                                    <span class="FlashSale-content-item-price-now">￥{{ item.price }}</span>
-                                    <span class="FlashSale-content-item-price-old">￥{{ item.Oprice }}</span>
-                                </div>
+                                    <div class="FlashSale-content-item-price">
+                                        <span class="FlashSale-content-item-price-now">￥{{ item.discount_price }}</span>
+                                        <span class="FlashSale-content-item-price-old">￥{{ item.price }}</span>
+                                    </div>
+                                </router-link>
                             </li>
                         </ul>
                     </div>
@@ -41,7 +43,7 @@
                 <div class="pc-home-content-top-right-bottom">
                     <div class="pc-home-content-new">
                         <div class="new-title">
-                            <img src="../../../../../public/icon/new.png" alt="新品" class="new-title-img"/>
+                            <img src="/icon/new.png" alt="新品" class="new-title-img"/>
                             <h2 class="new-title-font">
                                 <o>新</o>
                                 品上架
@@ -50,29 +52,35 @@
                         <div class="new-content">
                             <ul>
                                 <li class="new-content-item" v-for="(item,index) in newList" :key="index">
-                                    <div class="new-content-item-content">
-                                        <img :src="item.img" :alt="item.title" class="new-content-item-img"/>
-                                        <div class="new-content-item-info">
-                                            <h3 class="new-content-item-info-title">{{ item.title }}</h3>
-                                            <div class="new-content-item-info-row">
-                                                <div class="new-content-item-info-quality">
-                                                    <GoodQuality :text="item.quality"/>
+                                    <router-link :to="`/pc/productDetails/${item.product_id}`">
+                                        <div class="new-content-item-content">
+                                            <img :src="item.image_url" :alt="item.product_name"
+                                                 class="new-content-item-img"/>
+                                            <div class="new-content-item-info">
+                                                <h3 class="new-content-item-info-title">{{ item.product_name }}</h3>
+                                                <div class="new-content-item-info-row">
+                                                    <div class="new-content-item-info-quality">
+                                                        <GoodQuality :text="item.quality"/>
+                                                    </div>
+                                                    <div class="new-content-item-info-price">￥{{ item.price }}</div>
                                                 </div>
-                                                <div class="new-content-item-info-price">￥{{ item.price }}</div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </router-link>
                                 </li>
                             </ul>
                         </div>
                     </div>
                     <div class="pc-home-content-Promotional">
-                        <img src="../../../../../public/icon/宣传图.png" alt="宣传图" class="Promotional-img">
+                        <img src="/icon/宣传图.png" alt="宣传图" class="Promotional-img">
                     </div>
                 </div>
             </div>
         </div>
         <div class="pc-home-content-bottom">
+            <div class="pc-home-content-bottom-title">
+                <h2 class="pc-home-content-bottom-title-font">推荐商品</h2>
+            </div>
             <div class="pc-home-content-bottom-list">
                 <GoodItem v-for="item in goodItemList" :goodItem="item" :key="item.id"/>
             </div>
@@ -202,6 +210,7 @@
 
                                     img.new-content-item-img {
                                         width: 90px;
+                                        height: 90px;
                                     }
 
                                     h3.new-content-item-info-title {
@@ -280,6 +289,24 @@
     .pc-home-content-bottom {
         padding: 10px 0 40px;
 
+        .pc-home-content-bottom-title {
+            width: 100%;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding-left: 20px;
+            font-size: 15px;
+        }
+
+        .pc-home-content-bottom-title::before {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 25px;
+            margin-right: 10px;
+            background-color: #5a99dc;
+        }
+
         .pc-home-content-bottom-list {
             width: 100%;
             display: grid;
@@ -291,110 +318,137 @@
 </style>
 
 <script setup>
-import {ref} from "vue";
-import GoodQuality from "@/components/pc/goodQuality.vue";
-import GoodItem from "@/components/pc/goodItem.vue";
+import {onMounted, ref} from "vue";
+import GoodQuality from "@/components/pc/product/goodQuality.vue";
+import GoodItem from "@/components/pc/product/goodItem.vue";
+import request from "@/request/request";
+import {getFirstImageUrl, getImageUrlArray} from "@/utils/imgArray.js";
 
-const bennerList = ref(["../../../../public/benner/轮播1.jpg", "../../../../public/benner/轮播1.jpg", "../../../../public/benner/轮播1.jpg"])
+const bennerList = ref(["/benner/轮播1.jpg", "/benner/轮播1.jpg", "/benner/轮播1.jpg"])
 const FlashSaleList = ref([
     {
-        img: "../../../../public/goods/findx7海阔天空.png",
-        title: "Find X7 海阔天空 12+256",
+        img: "/goods/findx7海阔天空.png",
+        product_name: "Find X7 海阔天空 12+256",
         quality: "9",
-        Oprice: "3099",
-        price: "2399"
+        price: "3099",
+        discount_price: "2399"
     },
     {
-        img: "../../../../public/goods/一加12留白.png",
-        title: "一加 12 留白 16+512",
+        img: "/goods/一加12留白.png",
+        product_name: "一加 12 留白 16+512",
         quality: "9",
-        Oprice: "3499",
-        price: "3099"
+        price: "3499",
+        discount_price: "3099"
     },
     {
-        img: "../../../../public/goods/iphone13pro远峰蓝.png",
-        title: "iPhone 13 Pro 远峰蓝 256G",
+        img: "/goods/iphone13pro远峰蓝.png",
+        product_name: "iPhone 13 Pro 远峰蓝 256G",
         quality: "9",
-        Oprice: "3899",
-        price: "3499"
+        price: "3899",
+        discount_price: "3499"
     },
     {
-        img: "../../../../public/goods/iphone16pro沙漠色钛金属.png",
-        title: "iPhone 16 Pro 沙漠色钛金属 256G",
+        img: "/goods/iphone16pro沙漠色钛金属.png",
+        product_name: "iPhone 16 Pro 沙漠色钛金属 256G",
         quality: "9",
-        Oprice: "7999",
-        price: "7499"
+        price: "7999",
+        discount_price: "7499"
     }
 ]);
 const newList = ref([
     {
-        img: "../../../../public/goods/iphone11绿色.png",
-        title: "iPhone 11 绿色 128G",
+        image_url: "/goods/iphone11绿色.png",
+        product_name: "iPhone 11 绿色 128G",
         quality: "95",
         price: "1999",
     },
     {
-        img: "../../../../public/goods/小米14白色.png",
-        title: "小米 14 白色 16+512",
+        image_url: "/goods/小米14白色.png",
+        product_name: "小米 14 白色 16+512",
         quality: "95",
         price: "2899",
     },
     {
-        img: "../../../../public/goods/荣耀MagicVs2绒黑色.png",
-        title: "荣耀Magic Vs2 绒黑色 16+512",
+        image_url: "/goods/荣耀MagicVs2绒黑色.png",
+        product_name: "荣耀Magic Vs2 绒黑色 16+512",
         quality: "99",
         price: "5699",
     },
 ]);
-const goodItemList = ref([
-    {
-        id: "1",
-        img: "../../../../public/goods/荣耀MagicVs2绒黑色.png",
-        title: "荣耀Magic Vs2 绒黑色 16+512",
-        quality: "99",
-        price: "5699",
-    },
-    {
-        id: "2",
-        img: "../../../../public/goods/findx7海阔天空.png",
-        title: "Find X7 海阔天空 12+256",
-        quality: "9",
-        price: "2399"
-    },
-    {
-        id: "3",
-        img: "../../../../public/goods/一加12留白.png",
-        title: "一加 12 留白 16+512",
-        quality: "9",
-        price: "3099"
-    },
-    {
-        id: "4",
-        img: "../../../../public/goods/iphone13pro远峰蓝.png",
-        title: "iPhone 13 Pro 远峰蓝 256G",
-        quality: "9",
-        price: "3499"
-    },
-    {
-        id: "5",
-        img: "../../../../public/goods/iphone11绿色.png",
-        title: "iPhone 11 绿色 128G",
-        quality: "95",
-        price: "1999",
-    },
-    {
-        id: "6",
-        img: "../../../../public/goods/小米14白色.png",
-        title: "小米 14 白色 16+512",
-        quality: "95",
-        price: "2899",
-    },
-    {
-        id: "7",
-        img: "../../../../public/goods/iphone16pro沙漠色钛金属.png",
-        title: "iPhone 16 Pro 沙漠色钛金属 256G",
-        quality: "9",
-        price: "7499"
+const goodItemList = ref([])
+
+const getRecommendList = async () => {
+    try {
+        const res = await request({
+            url: "/api/recommend/15",
+            method: "get",
+        });
+        console.log(res.data);
+        goodItemList.value = res.data;
+    } catch (err) {
+        console.log(err);
     }
-])
+};
+const getNewList = async () => {
+    try {
+        const res = await request({
+            url: "/api/product/newList",
+            params: {
+                num: 3
+            },
+            method: "get",
+        });
+        console.log(res.data);
+        // 检查并裁剪 res.data 数组
+        let newData = res.data;
+        if (newData.length > 3) {
+            newData = newData.slice(0, 3);
+        }
+        // 使用工具函数处理图片数组
+        const processedNewList = newData.map(item => {
+            const imageUrlArray = getImageUrlArray(item);
+            return {
+                ...item,
+                image_url: getFirstImageUrl(imageUrlArray),
+            };
+        });
+
+        newList.value = processedNewList;
+    } catch (err) {
+        console.log(err);
+    }
+};
+const getFlashSalesList = async () => {
+    try {
+        const res = await request({
+            url: "/api/product/flashSalesList",
+            params: {
+                num: 4
+            },
+            method: "get",
+        });
+        console.log(res.data);
+        // 检查并裁剪 res.data 数组
+        let newData = res.data;
+        if (newData.length > 4) {
+            newData = newData.slice(0, 4);
+        }
+        // 使用工具函数处理图片数组
+        const processedFlashSalesList = newData.map(item => {
+            const imageUrlArray = getImageUrlArray(item);
+            return {
+                ...item,
+                img: getFirstImageUrl(imageUrlArray),
+            };
+        });
+        FlashSaleList.value = processedFlashSalesList;
+    } catch (err) {
+        console.log(err);
+    }
+}
+onMounted(() => {
+    getFlashSalesList();
+    getRecommendList();
+    getNewList();
+});
 </script>
