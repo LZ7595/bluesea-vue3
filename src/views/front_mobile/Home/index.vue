@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-      666
+      移动端，暂未开放
   </div>
 </template>
 

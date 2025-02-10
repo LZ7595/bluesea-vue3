@@ -12,7 +12,7 @@
             <el-tag v-if="hasDiscount" type="danger" effect="dark" size="small">限时抢购</el-tag>
         </div>
         <div class="goodItem-bottom">
-            <button class="addCart">加入购物车</button>
+            <button class="addCart" @click="addMyCart(product_id)">加入购物车</button>
             <i class="line"></i>
             <button class="buyNow">立即购买</button>
         </div>
@@ -20,8 +20,9 @@
 </template>
 
 <script setup>
-import {computed, defineOptions, defineProps, toRefs} from 'vue';
-import {getFirstImageUrl, getImageUrlArray} from "@/utils/imgArray.js";
+import {computed, defineOptions, defineProps, ref} from 'vue';
+import cartRes from "@/request/shoppingCart";
+import {ElMessage} from "element-plus";
 
 const props = defineProps({
     goodItem: {
@@ -29,13 +30,24 @@ const props = defineProps({
         default: () => ({})
     }
 })
+const user_id = ref(null);
+const addMyCart = async (product_id) => {
+    try {
+        user_id.value = JSON.parse(localStorage.getItem('UserData')).id
+        const res = await cartRes.addCart(user_id.value, product_id)
+        console.log(res)
+    } catch (e) {
+        console.log(e)
+    }
+}
 
-const {product_id, product_name, quality} = toRefs(props.goodItem.product)
-const imageUrlArray = computed(() => getImageUrlArray(props.goodItem.product));
-const image_url = computed(() => getFirstImageUrl(imageUrlArray.value));
-const price = computed(() => props.goodItem.flashSale ? props.goodItem.flashSale.discount_price : props.goodItem.product.price);
+const product_id = computed(() => props.goodItem.product.product_id);
+const product_name = computed(() => props.goodItem.product.product_name);
+const quality = computed(() => props.goodItem.product.quality);
+const image_url = computed(() => props.goodItem.product.product_main_image);
+const price = computed(() => props.goodItem.productPromotion ? props.goodItem.productPromotion.discount_price : props.goodItem.product.price);
 // 计算属性判断是否有折扣
-const hasDiscount = computed(() => props.goodItem.flashSale && props.goodItem.flashSale.discount_price);
+const hasDiscount = computed(() => props.goodItem.productPromotion && props.goodItem.productPromotion.discount_price);
 
 defineOptions({
     name: 'goodItem'

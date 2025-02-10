@@ -4,12 +4,12 @@
             <div class="pc-home-title">
                 <ul class="pc-home-title-ul">
                     <li
-                        v-for="(item, index) in categories"
-                        :key="index"
-                        :class="{ active: activeIndex === index }"
-                        @click="changeActiveIndex(index)"
+                            v-for="(item, index) in categories"
+                            :key="index"
+                            :class="{ active: activeIndex === index }"
+                            @click="changeActiveIndex(index)"
                     >
-                        {{ item }}
+                        {{ item.name }}
                     </li>
                 </ul>
             </div>
@@ -72,18 +72,24 @@
 </style>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import {ref, computed} from 'vue';
+import {useRouter, useRoute} from 'vue-router';
 
-const categories = ref(['推荐', '苹果', '安卓', '平板', '电脑', '生活']);
+const categories = ref([
+    {name: '推荐', url: '/pc/home'},
+    {name: '苹果', url: '/pc/home/apple'},
+    {name: '国产', url: '/pc/home/android'},
+    {name: '平板', url: '/pc/home/pad'},
+    {name: '电脑', url: '/pc/home/computer'},
+    {name: '生活', url: '/pc/home/life'}]);
 const router = useRouter();
 const route = useRoute();
 
 const activeIndex = computed(() => {
-    return categories.value.findIndex(category => category === route.name);
+    return categories.value.findIndex(category => category.url === route.path);
 });
 
 const changeActiveIndex = (index) => {
-    router.push({ name: categories.value[index] });
+    router.push(categories.value[index].url);
 };
 </script>

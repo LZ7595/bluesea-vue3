@@ -63,7 +63,23 @@ const Auth = {
             .catch(err => {
                 return Promise.reject(err);
             })
-    }
+    },
     //退出
+    logout: () => {
+        return request({
+            url: '/api/auth/logout',
+            method: 'post'
+        }).then({
+            data: res => {
+                if (res.code === 200) {
+                    return res.data;
+                } else {
+                    return Promise.reject(res);
+                }
+            }
+        }).catch(err => {
+            return Promise.reject(err);
+        })
+    }
 }
 export default Auth;

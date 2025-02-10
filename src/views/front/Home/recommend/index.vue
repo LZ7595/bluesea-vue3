@@ -24,7 +24,7 @@
                             <li class="FlashSale-content-item" v-for="(item,index) in FlashSaleList" :key="index">
                                 <router-link :to="`/pc/productDetails/${item.product_id}`">
                                     <div class="FlashSale-content-item-content">
-                                        <img :src="item.img" :alt="item.product_name"
+                                        <img :src="item.product_main_image" :alt="item.product_name"
                                              class="FlashSale-content-item-img"/>
                                         <div class="FlashSale-content-item-info">
                                             <h3 class="FlashSale-content-item-info-title">{{ item.product_name }}</h3>
@@ -54,7 +54,7 @@
                                 <li class="new-content-item" v-for="(item,index) in newList" :key="index">
                                     <router-link :to="`/pc/productDetails/${item.product_id}`">
                                         <div class="new-content-item-content">
-                                            <img :src="item.image_url" :alt="item.product_name"
+                                            <img :src="item.product_main_image" :alt="item.product_name"
                                                  class="new-content-item-img"/>
                                             <div class="new-content-item-info">
                                                 <h3 class="new-content-item-info-title">{{ item.product_name }}</h3>
@@ -327,28 +327,28 @@ import {getFirstImageUrl, getImageUrlArray} from "@/utils/imgArray.js";
 const bennerList = ref(["/benner/轮播1.jpg", "/benner/轮播1.jpg", "/benner/轮播1.jpg"])
 const FlashSaleList = ref([
     {
-        img: "/goods/findx7海阔天空.png",
+        product_main_image: "/goods/findx7海阔天空.png",
         product_name: "Find X7 海阔天空 12+256",
         quality: "9",
         price: "3099",
         discount_price: "2399"
     },
     {
-        img: "/goods/一加12留白.png",
+        product_main_image: "/goods/一加12留白.png",
         product_name: "一加 12 留白 16+512",
         quality: "9",
         price: "3499",
         discount_price: "3099"
     },
     {
-        img: "/goods/iphone13pro远峰蓝.png",
+        product_main_image: "/goods/iphone13pro远峰蓝.png",
         product_name: "iPhone 13 Pro 远峰蓝 256G",
         quality: "9",
         price: "3899",
         discount_price: "3499"
     },
     {
-        img: "/goods/iphone16pro沙漠色钛金属.png",
+        product_main_image: "/goods/iphone16pro沙漠色钛金属.png",
         product_name: "iPhone 16 Pro 沙漠色钛金属 256G",
         quality: "9",
         price: "7999",
@@ -357,19 +357,19 @@ const FlashSaleList = ref([
 ]);
 const newList = ref([
     {
-        image_url: "/goods/iphone11绿色.png",
+        product_main_image: "/goods/iphone11绿色.png",
         product_name: "iPhone 11 绿色 128G",
         quality: "95",
         price: "1999",
     },
     {
-        image_url: "/goods/小米14白色.png",
+        product_main_image: "/goods/小米14白色.png",
         product_name: "小米 14 白色 16+512",
         quality: "95",
         price: "2899",
     },
     {
-        image_url: "/goods/荣耀MagicVs2绒黑色.png",
+        product_main_image: "/goods/荣耀MagicVs2绒黑色.png",
         product_name: "荣耀Magic Vs2 绒黑色 16+512",
         quality: "99",
         price: "5699",
@@ -404,16 +404,7 @@ const getNewList = async () => {
         if (newData.length > 3) {
             newData = newData.slice(0, 3);
         }
-        // 使用工具函数处理图片数组
-        const processedNewList = newData.map(item => {
-            const imageUrlArray = getImageUrlArray(item);
-            return {
-                ...item,
-                image_url: getFirstImageUrl(imageUrlArray),
-            };
-        });
-
-        newList.value = processedNewList;
+        newList.value = newData;
     } catch (err) {
         console.log(err);
     }
@@ -433,22 +424,14 @@ const getFlashSalesList = async () => {
         if (newData.length > 4) {
             newData = newData.slice(0, 4);
         }
-        // 使用工具函数处理图片数组
-        const processedFlashSalesList = newData.map(item => {
-            const imageUrlArray = getImageUrlArray(item);
-            return {
-                ...item,
-                img: getFirstImageUrl(imageUrlArray),
-            };
-        });
-        FlashSaleList.value = processedFlashSalesList;
+        FlashSaleList.value = newData;
     } catch (err) {
         console.log(err);
     }
 }
 onMounted(() => {
+    getNewList();
     getFlashSalesList();
     getRecommendList();
-    getNewList();
 });
 </script>

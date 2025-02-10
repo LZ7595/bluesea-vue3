@@ -27,3 +27,7 @@ body {
 .el-input{
     --el-input-focus-border-color: #5a99dc;
 }
+.div-page{
+    width: 100%;
+    background-color: #f6f6f6;
+}

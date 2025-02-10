@@ -234,10 +234,11 @@ const onLogin = async () => {
                     password: password0.value
                 }, 'USER_PASSWORD');
                 console.log(res);
-                const data1 = res.data.data;
+                const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
                 ElMessage.success('登录成功');
+                history.go(-1);
             } catch (error) {
                 console.error('用户名密码登录失败', error);
             }
@@ -259,7 +260,7 @@ const onLogin = async () => {
                     code: code0.value
                 }, 'EMAIL_VERIFICATION');
                 console.log(res);
-                const data1 = res.data.data;
+                const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
                 ElMessage.success('登录成功');
@@ -284,7 +285,7 @@ const onLogin = async () => {
                     password: password0.value
                 }, 'EMAIL_PASSWORD');
                 console.log(res);
-                const data1 = res.data.data;
+                const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
                 ElMessage.success('登录成功');

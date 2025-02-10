@@ -4,28 +4,46 @@
             <div class="viewport">
                 <div class="rside">
                     <ul class="header-ul">
-                        <li v-if="isLogin">
+                        <li v-if="!isLogin">
                             <router-link to="/pc/Auth/Login">登录</router-link>
                         </li>
-                        <li v-if="isLogin">
+                        <li v-if="!isLogin">
                             <router-link to="/pc/Auth/Register">注册</router-link>
                         </li>
                         <li v-else class="user-info">
-                            <router-link to="/pc/UserCenter">
-                                <p>{{ userInfo.username }}</p>
-                                <img class="arrow" src="/icon/topArrow.svg"/>
+                            <router-link to="/pc/user">
+                                <p>{{ userData.username }}</p>
+                                <img class="arrow" src="/icon/topArrow.svg" alt="箭头"/>
                             </router-link>
                         </li>
-                        <div class="user-info-content" v-if="!isLogin">
+                        <div class="user-info-content" v-if="isLogin">
                             <div class="user-info-content-go">
-                                {{ userInfo.username }}
+                                <div class="user-info-avatar">
+                                    <el-avatar :icon="UserFilled" :src="userInfo.avatar" :size="70"/>
+                                </div>
+                                <div class="user-info-content-div">
+                                    <div>
+                                        <p class="username">用户名：{{ userInfo.username }}</p>
+                                        <p class="user-role">账号类型：{{ userInfo.role }}</p>
+                                    </div>
+                                    <div class="user-action">
+                                        <button @click="logout">退出登录</button>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                         <li>
-                            <router-link to="">我的订单</router-link>
+                            <router-link to="/pc/home">首页</router-link>
                         </li>
                         <li>
-                            <router-link to="">会员中心</router-link>
+                            <router-link to="/pc/cart">购物车</router-link>
+                        </li>
+                        <li>
+                            <router-link to="/pc/order">我的订单</router-link>
+                        </li>
+                        <li>
+                            <router-link to="/pc/user">账号设置</router-link>
                         </li>
                     </ul>
                 </div>
@@ -34,9 +52,11 @@
         <div class="pc-header-search-logo">
             <div class="viewport">
                 <div class="search-logo">
-                    <div class="logo">
-                        <img src="/icon/logo1.png" alt=""/>
-                    </div>
+                    <router-link to="/pc/home">
+                        <div class="logo">
+                            <img src="/icon/logo1.png" alt=""/>
+                        </div>
+                    </router-link>
                     <Search/>
                 </div>
             </div>
@@ -68,18 +88,26 @@
             </div>
         </div>
     </div>
+    <QuickActionGroup/>
 </template>
 
 <script setup>
-import Search from "@/components/pc/search.vue";
+import Search from "@/components/pc/common/search.vue";
+import QuickActionGroup from "@/components/pc/common/quickActionGroup.vue";
+import Auth from "@/request/auth";
+import {getCookie, parseJwt} from "@/utils/cookieJwt";
+
 import {ref} from "vue";
+import {ElMessage} from "element-plus";
+import userRes from "@/request/user";
+import {UserFilled} from "@element-plus/icons-vue";
 
 const footBarList = ref([
-    {name: '首页', url: ''},
+    {name: '首页', url: '/pc/home'},
     {name: '关于我们', url: ''},
     {name: '联系我们', url: ''},
     {name: '加入我们', url: ''},
-    {name: '管理后台', url: ''}
+    {name: '管理后台', url: '/pc/admin'}
 ]);
 
 const footServiceList = ref([
@@ -88,11 +116,49 @@ const footServiceList = ref([
     {name: "极速发货", text: "下单24小时内极速发货", img: '/icon/by.png'},
     {name: "售后无忧", text: "7天无理由退货", img: '/icon/sh.png'},
 ])
-const userInfo = ref(JSON.parse(localStorage.getItem('UserData')));
+const userStore = ref(JSON.parse(localStorage.getItem('token')));
 
-const isLogin = ref(!userInfo.value);
-console.log(userInfo.value)
-console.log(isLogin.value)
+// 从 cookie 中获取 JWT 令牌
+const jwtToken = getCookie('token');
+// 解析从 cookie 中获取的 JWT 令牌
+const userData = ref(userStore.value ? parseJwt(userStore.value) : jwtToken ? parseJwt(jwtToken) : null);
+localStorage.setItem('UserData', JSON.stringify(userData.value));
+// 判断用户是否登录
+const isLogin = ref(!!userData.value);
+const userInfo = ref({});
+
+// 退出登录的函数
+const logout = async () => {
+    try {
+        const res = await Auth.logout();
+        console.log(res)
+        if (res.status === 200) {
+            // 清除本地存储的用户信息
+            localStorage.removeItem('UserData');
+            localStorage.removeItem('token');
+            isLogin.value = false;
+            ElMessage.success('退出登录成功');
+        } else {
+            ElMessage.error('退出登录失败');
+        }
+    } catch (error) {
+        console.error('退出登录失败:', error);
+        ElMessage.error('退出登录失败');
+    }
+};
+const getUserDetail = async () => {
+    try {
+        const res = await userRes.getUserInfo(userData.value.id);
+        console.log(res)
+        userInfo.value = res;
+    } catch (err) {
+        console.log(err)
+        ElMessage.error('获取用户信息失败');
+    }
+}
+if (isLogin.value) {
+    getUserDetail();
+}
 </script>
 <style scoped>
 .pc-front {
@@ -165,10 +231,31 @@ console.log(isLogin.value)
                     .user-info-content-go {
                         position: relative;
                         width: 300px;
-                        height: 120px;
+                        height: 110px;
                         padding: 20px;
                         background: #fff;
                         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                        display: flex;
+                        font-size: 14px;
+                        gap: 30px;
+
+                        .user-info-content-div {
+                            display: flex;
+                            flex-direction: column;
+                            width: 160px;
+                            justify-content: space-between;
+
+                            .user-action {
+                                display: flex;
+                                justify-content: right;
+                                margin-top: 10px;
+
+                                button:hover{
+                                    color: #5a99dc;
+                                }
+                            }
+                        }
+
                     }
                 }
 
