@@ -22,6 +22,12 @@
     "华为（Huawei）",
     "联想（Lenovo）",
     "苹果（Apple）",
+    "荣耀（Honor）",
+    "小米（Xiaomi）",
+    "OPPO",
+    "iQOO",
+    "vivo",
+    "一加（OnePlus）",
     "其他"
   ],
   "手机": [
@@ -79,6 +85,7 @@
     "联想（Lenovo）",
     "苹果（Apple）",
     "雷神（ThundeRobot）",
+    "荣耀（Honor）",
     "其他"
   ],
   "电脑配件": [

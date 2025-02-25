@@ -132,7 +132,7 @@
 
                     ul {
                         display: flex;
-                        justify-content: center;
+                        justify-content: flex-start;
                         align-items: center;
 
                         li.FlashSale-content-item {

@@ -1,5 +1,5 @@
 <template>
-home
+分类管理
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 <template>
-home
+系统设置
 </template>
 
 <script>

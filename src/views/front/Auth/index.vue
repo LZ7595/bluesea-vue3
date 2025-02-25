@@ -1,4 +1,3 @@
-vue
 <template>
     <div class="LoginAndRegister">
         <div class="shell">
@@ -133,7 +132,7 @@ export default {
 </script>
 
 <script setup>
-import {computed, watch, ref} from "vue";
+import {computed, watch, ref, onMounted} from "vue";
 import Auth from "@/request/auth";
 import {ElMessage} from "element-plus";
 import {validateEmail, validateUsername, validatePassword, validateCode} from "@/utils/validation";
@@ -141,6 +140,7 @@ import SendCodeBtn from "@/components/pc/login/sendCodeBtn.vue";
 import { useRoute } from 'vue-router';
 import router from "@/router/index";
 import { useUserStore } from "@/store/user";
+import Cookies from 'js-cookie';
 
 // 获取路由对象
 const route = useRoute();
@@ -154,7 +154,6 @@ const isTxl = ref(false);
 const isZ = ref(false);
 const currentComponent = ref('UserAndPassword');
 
-
 // 注册
 const username = ref('555');
 const email = ref('1097260541@qq.com');
@@ -164,7 +163,6 @@ const usernameError = ref('');
 const emailError = ref('');
 const codeError = ref('');
 const passwordError = ref('');
-
 
 // 登录1
 const username0 = ref('');
@@ -181,9 +179,11 @@ if (action === 'Login') {
     isHidden.value =!isHidden.value;
     isTxl.value =!isTxl.value;
     isZ.value =!isZ.value;
-}else if (action === 'Register') {}else {
+} else if (action === 'Register') {
+} else {
     router.push('/');
 }
+
 const changeForm = () => {
     isTxr.value =!isTxr.value;
     isHidden.value =!isHidden.value;
@@ -191,10 +191,8 @@ const changeForm = () => {
     isZ.value =!isZ.value;
 };
 
-
 const items = ref(['用户密码', '邮箱验证', '邮箱密码']);
 const currentIndex = ref(0);
-
 
 const selectItem = (index) => {
     currentIndex.value = index;
@@ -210,7 +208,6 @@ const selectItem = (index) => {
             break;
     }
 };
-
 
 const getComponentName = computed(() => {
     return currentComponent.value;
@@ -302,7 +299,6 @@ const onLogin = async () => {
     }
 };
 
-
 const onRegister = async () => {
     const usernameErr = validateUsername(username.value);
     const emailErr = validateEmail(email.value);
@@ -350,7 +346,6 @@ const onRegister = async () => {
     }
 };
 
-
 watch(username, () => {
     usernameError.value = validateUsername(username.value);
 });
@@ -364,12 +359,37 @@ watch(password, () => {
     passwordError.value = validatePassword(password.value);
 });
 
-
 watch(username0, () => {
     usernameError0.value = validateUsername(username0.value);
 });
 watch(password0, () => {
     passwordError0.value = validatePassword(password0.value);
+});
+
+// 检查本地缓存和 cookie
+onMounted(() => {
+    const userData = localStorage.getItem('UserData');
+    let localToken = localStorage.getItem('token');
+    const cookieToken = Cookies.get('token');
+
+    // 去除 localToken 两端的双引号（如果存在）
+    if (localToken && localToken.startsWith('"') && localToken.endsWith('"')) {
+        localToken = localToken.slice(1, -1);
+    }
+
+    if (!(userData && localToken && cookieToken && localToken === cookieToken)) {
+        console.log(localToken);
+        console.log(cookieToken);
+        Auth.logout().then(() => {
+            // 可以在这里添加登出成功后的提示或其他操作
+            ElMessage.info('检测到登录信息异常，已退出登录');
+        }).catch((err) => {
+            console.error('退出登录失败:', err);
+            ElMessage.error('退出登录失败，请稍后重试');
+        });
+    } else {
+        history.go(-1);
+    }
 });
 </script>
 

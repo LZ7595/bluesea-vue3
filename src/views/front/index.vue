@@ -107,7 +107,7 @@ const footBarList = ref([
     {name: '关于我们', url: ''},
     {name: '联系我们', url: ''},
     {name: '加入我们', url: ''},
-    {name: '管理后台', url: '/pc/admin'}
+    {name: '管理后台', url: '/admin'}
 ]);
 
 const footServiceList = ref([

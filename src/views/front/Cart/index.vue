@@ -29,7 +29,7 @@
                     {{ item.product_name }}
                 </div>
                 <div class="shop-car-price-tips">
-                    ￥<span>{{ item.price }}</span>
+                    ￥<span>{{ item.discount_price ? item.discount_price : item.price }}</span>
                 </div>
                 <div class="shop-car-comment">
                     <button @click="minusCount(item.cart_id)">-</button>
@@ -37,7 +37,7 @@
                     <button @click="addCount(item.cart_id)">+</button>
                 </div>
                 <div class="shop-car-sub-total">
-                    ￥<span>{{ (item.price * item.quantity).toFixed(2) }}</span>
+                    ￥<span>{{ calculateSubTotal(item).toFixed(2) }}</span>
                 </div>
                 <div class="shop-car-del">
                     <a @click="removeShopCarAction(item.cart_id)">删除</a>
@@ -56,15 +56,15 @@
         </div>
     </div>
     <el-dialog
-            v-model="dialogVisible"
-            title="删除购物车"
-            width="500"
+        v-model="dialogVisible"
+        title="删除购物车"
+        width="500"
     >
         <span>这么好的商品，您确定要删除它吗？</span>
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="confirmDeleteAction(cartId)">
+                <el-button type="primary" @click="confirmDeleteAction(currentCartId.value)">
                     确定
                 </el-button>
             </div>
@@ -86,13 +86,13 @@ const userId = ref(userData.value.id)
 const shopCarList = ref([]);
 const isSelected = ref(null)
 
-const updateSelectedStatus = async (cartId,is_selected) => {
+const updateSelectedStatus = async (cartId, is_selected) => {
     try {
-        const res = await cartRes.updateSelectedStatus(cartId,is_selected);
+        const res = await cartRes.updateSelectedStatus(cartId, is_selected);
         if (res.status === 200) {
             ElMessage.success('更新成功');
         }
-    }catch (e){
+    } catch (e) {
         ElMessage.error('更新失败');
         console.log(e)
     }
@@ -104,7 +104,7 @@ const updateAllSelectedStatus = async (selectedList) => {
         if (res.status === 200) {
             ElMessage.success('更新成功');
         }
-    }catch (e){
+    } catch (e) {
         ElMessage.error('更新失败');
         console.log(e)
     }
@@ -132,7 +132,7 @@ const toggleSelectItem = (cartId) => {
     if (item) {
         item.is_selected = !item.is_selected;
         isSelected.value = item.is_selected ? 1 : 0;
-        updateSelectedStatus(cartId,isSelected.value)
+        updateSelectedStatus(cartId, isSelected.value)
     }
 };
 
@@ -178,7 +178,7 @@ const handleCountChange = (e, cartId) => {
     if (item && !isNaN(newCount) && newCount > 0 && newCount <= item.stock) {
         item.quantity = newCount;
         updateQuantity(cartId, item.quantity);
-    }else {
+    } else {
         item.quantity = 1
         ElMessage.error('数量不能小于1')
     }
@@ -203,12 +203,24 @@ const confirmDeleteAction = async () => {
     }
 };
 
+// 计算商品小计
+const calculateSubTotal = (item) => {
+    if (item.discount_price) {
+        if (item.quantity === 1) {
+            return item.discount_price;
+        } else {
+            return item.discount_price + (item.quantity - 1) * item.price;
+        }
+    }
+    return item.price * item.quantity;
+};
+
 // 计算总计
 const saleTotal = computed(() => {
     return Array.isArray(shopCarList.value)
         ? shopCarList.value.reduce((total, item) => {
             if (item.is_selected) {
-                return total + (item.price || 0) * (item.quantity || 0);
+                return total + calculateSubTotal(item);
             }
             return total;
         }, 0)

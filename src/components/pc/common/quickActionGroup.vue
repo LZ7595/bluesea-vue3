@@ -18,11 +18,13 @@
                 content="客服"
                 placement="left"
         >
-            <div class="quick-action-item">
-                <el-icon>
-                    <ChatLineRound/>
-                </el-icon>
-            </div>
+            <router-link to="/im">
+                <div class="quick-action-item">
+                    <el-icon>
+                        <ChatLineRound/>
+                    </el-icon>
+                </div>
+            </router-link>
         </el-tooltip>
         <div class="quick-action-item" @click="scrollToTop">
             <el-icon>

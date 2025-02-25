@@ -72,7 +72,13 @@ const pcUserRouter = [
         path: '/pc/Auth/:action',
         name: 'Auth',
         component: () => import('@/views/front/Auth/index.vue'),
-    }
+    },
+    {
+        path: '/im',
+        name: 'Im',
+        component: () => import("@/views/front/Im/Im.vue"),
+    },
+
 ];
 // 定义移动端路由配置
 const mobileUserRouter = [
@@ -98,18 +104,60 @@ const notFoundRouter = [
         component: () => import('@/views/NotFoundPage.vue')
     }
 ];
-const pcAdminRouter = [
+const adminRouter = [
     {
-        path: '/pc/admin',
+        path: '/admin',
         component: () => import('@/views/back/index.vue'),
-        redirect: '/pc/admin/home',
+        redirect: '/admin/home',
         name: "admin",
         children: [
             {
                 path: 'home',
                 name: "管理后台首页",
                 component: () => import('@/views/back/Home/index.vue'),
-                meta: { isPC: true, requiresAdmin: true }
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'product',
+                name: "商品管理",
+                component: () => import('@/views/back/Product/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'order',
+                name: "订单管理",
+                component: () => import('@/views/back/Order/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'user',
+                name: "用户管理",
+                component: () => import('@/views/back/User/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'category',
+                name: "分类管理",
+                component: () => import('@/views/back/Category/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'promotion',
+                name: "促销管理",
+                component: () => import('@/views/back/Promotion/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'service',
+                name:'客服对话',
+                component:()=>import('@/views/back/Service/index.vue'),
+                meta:{requiresAdmin:true}
+            },
+            {
+                path:'setting',
+                name:'系统设置',
+                component:()=>import('@/views/back/Setting/index.vue'),
+                meta:{requiresAdmin:true}
             }
         ]
     }
@@ -132,10 +180,10 @@ function updateRoutesByDevice(role) {
         notFoundRouter.forEach(route => router.addRoute(route));
     } else {
         pcUserRouter.forEach(route => router.addRoute(route));
-        if (role === 'Admin') {
-            pcAdminRouter.forEach(route => router.addRoute(route));
-        }
         notFoundRouter.forEach(route => router.addRoute(route));
+    }
+    if (role === 'Admin') {
+        adminRouter.forEach(route => router.addRoute(route));
     }
     console.log(router.getRoutes());
 }
@@ -171,6 +219,7 @@ updateRoutesByDevice(userRole);
 // 在路由守卫中根据设备类型进行重定向及其他逻辑处理
 let initialDeviceType = isMobileDevice();
 router.beforeEach((to, from, next) => {
+    console.log(to);
     const loadingStore = useLoadingStore();
     loadingStore.startLoading();
     const currentDeviceType = isMobileDevice();

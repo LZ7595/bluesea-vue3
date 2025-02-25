@@ -13,6 +13,8 @@ export const validateUsername = (value) => {
 
 export const validateEmail = (value) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    console.log(emailRegex.test(value))
+    console.log(value)
     if (!value) {
         return '邮箱不能为空';
     } else if (!emailRegex.test(value)) {
@@ -42,3 +44,13 @@ export const validatePassword = (value) => {
         return '';
     }
 };
+
+export const validatePhone = (value) => {
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!value) {
+        return '手机号不能为空';
+    }
+    if (!phoneRegex.test(value)) {
+        return '请输入正确的手机号';
+    }
+}

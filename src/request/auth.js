@@ -72,6 +72,8 @@ const Auth = {
         }).then({
             data: res => {
                 if (res.code === 200) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('UserData');
                     return res.data;
                 } else {
                     return Promise.reject(res);

@@ -75,6 +75,10 @@
                         <span>{{ encryptedEmail }}</span>
                         <router-link :to="{ path: '/pc/security', query: { action: 'changeEmail' } }">换绑邮箱</router-link>
                     </div>
+                    <div class="security-row">
+                        <span>登录密码：</span>
+                        <router-link :to="{ path: '/pc/security', query: { action: 'changePassword' } }">修改密码</router-link>
+                    </div>
                 </div>
             </el-tab-pane>
         </el-tabs>
@@ -259,6 +263,10 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 20px;
+
+            a:hover {
+                color: #5a99dc;
+            }
         }
     }
 }
