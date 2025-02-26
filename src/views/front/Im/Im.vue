@@ -59,7 +59,8 @@
                         class="message-avatar"
                     >
                     <div class="message-content">
-                        <div class="message-text">{{ message.content }}</div>
+                        <div v-if="message.type === 'text'" class="message-text">{{ message.content }}</div>
+                        <img v-if="message.type === 'image'" :src="message.content" class="message-image" v-viewer="{ src: message.content }" >
                         <div class="message-time">{{ formatTime(message.create_time) }}</div>
                         <span
                             v-if="message.status === 'sending'"
@@ -73,6 +74,7 @@
                 </div>
             </el-scrollbar>
             <div class="chat-input">
+                <el-button icon="ElEmoji" @click="showEmojiPicker = !showEmojiPicker">表情</el-button>
                 <el-input
                     v-model="newMessage.content"
                     placeholder="输入消息..."
@@ -80,12 +82,17 @@
                     :disabled="!currentUser"
                     autosize
                 ></el-input>
+                <input type="file" ref="fileInput" @change="handleFileSelect" style="display: none;">
+                <el-button :icon="Picture" @click="openFileInput"></el-button>
                 <el-button
                     type="primary"
                     @click="sendMessage"
                     :loading="isSending"
                     :disabled="!currentUser"
                 >发送</el-button>
+            </div>
+            <div v-if="showEmojiPicker" class="emoji-picker-container">
+                <EmojiPicker @select-emoji="insertEmoji"></EmojiPicker>
             </div>
         </div>
     </div>
@@ -94,9 +101,11 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { ElMessage, ElScrollbar } from 'element-plus';
+import { Picture } from '@element-plus/icons-vue';
 import { findMessageBySendUserAndReceiveUser, searchUserForForm } from '@/request/message';
 import { sendMessageTo } from '@/request/webSocketApi';
 import websocket from '@/utils/webSocket';
+import EmojiPicker from '@/components/pc/common/EmojiPicker.vue';
 
 // 响应式数据
 const currentUser = ref(null);
@@ -109,8 +118,8 @@ const messageContainer = ref(null);
 const isSending = ref(false);
 const reconnectInterval = 5000;
 let reconnectTimer = null;
-
-
+const showEmojiPicker = ref(false);
+const fileInput = ref(null);
 
 // 格式化时间
 const formatTime = (timeStr) => {
@@ -144,7 +153,7 @@ const sendMessage = async () => {
     if (!validateMessage()) return;
 
     isSending.value = true;
-    const message = buildMessageObject();
+    const message = buildMessageObject('text');
 
     try {
         // 乐观更新
@@ -171,12 +180,13 @@ const sendMessage = async () => {
 };
 
 // 构建消息对象
-const buildMessageObject = () => ({
+const buildMessageObject = (type) => ({
     handle: Date.now().toString(),
     send_user: loginUser.value.id,
     receive_user: currentUser.value.id,
     content: newMessage.value.content.trim(),
-    create_time: new Date().toISOString()
+    create_time: new Date().toISOString(),
+    type
 });
 
 // 校验消息
@@ -305,6 +315,62 @@ const connectWebSocket = async (userId) => {
             reject(error);
         };
     });
+};
+
+// 插入表情
+const insertEmoji = (emoji) => {
+    newMessage.value.content += emoji;
+    showEmojiPicker.value = false;
+};
+
+// 处理文件选择
+const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const imageData = e.target.result;
+            const message = {
+                handle: Date.now().toString(),
+                send_user: loginUser.value.id,
+                receive_user: currentUser.value.id,
+                content: imageData,
+                create_time: new Date().toISOString(),
+                type: 'image'
+            };
+
+            try {
+                // 乐观更新
+                messages.value.push({ ...message, status: 'sending' });
+                nextTick(scrollToBottom);
+
+                // 发送WebSocket
+                sendWebSocketMessage(message);
+
+                // 持久化到后端
+                await sendMessageTo(message);
+
+                // 更新状态
+                const index = messages.value.findIndex(m => m.handle === message.handle);
+                if (index !== -1) {
+                    messages.value[index].status = 'sent';
+                }
+            } catch (error) {
+                handleSendError(message);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    fileInput.value.value = '';
+};
+
+// 打开文件选择器
+const openFileInput = () => {
+    if (currentUser.value) {
+        fileInput.value.click();
+    } else {
+        ElMessage.warning('请选择聊天对象');
+    }
 };
 
 // 生命周期
@@ -472,5 +538,39 @@ onBeforeUnmount(() => {
     background: white;
     display: flex;
     gap: 12px;
+}
+.message-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    /* 使图片显示为块级元素，便于居中对齐 */
+    display: block;
+    /* 图片水平居中 */
+    margin: 0 auto;
+}
+
+/* 点击图片时的样式 */
+.message-image:active {
+    /* 点击时稍微缩小图片 */
+    transform: scale(0.98);
+}
+
+/* 如果图片加载失败时的样式 */
+.message-image[src=""] {
+    /* 可以设置一个默认的背景颜色或图标 */
+    background-color: #eee;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 14px;
+}
+
+/* 可以添加一些响应式样式，在不同屏幕尺寸下调整图片的显示 */
+@media (max-width: 768px) {
+    .message-image {
+        max-width: 80%;
+    }
 }
 </style>
