@@ -3,24 +3,24 @@
         <div class="back-header">
             <div class="back-header-left">
                 <div class="back-header-left-logo">
-                    <img src="/icon/logo3.png" alt="">
+                    <img :src="server_URL + '/icon/logo3.png'" alt="">
                 </div>
                 <div class="back-header-left-title">后台管理系统</div>
             </div>
             <div class="back-header-right">
                 <!-- 在视口宽度小于等于 1024px 时显示 -->
                 <div v-if="!isLargeScreen" class="mobile-menu">
-                    <div class="back-header-right-user">
-                        <el-icon>
-                            <User />
-                        </el-icon>
-                    </div>
+                    <!--                    <div class="back-header-right-user">-->
+                    <!--                        <el-icon>-->
+                    <!--                            <User />-->
+                    <!--                        </el-icon>-->
+                    <!--                    </div>-->
                     <div class="back-header-right-menu" @click="toggleIcon">
                         <el-icon v-if="isMenuVisible">
-                            <Menu />
+                            <Menu/>
                         </el-icon>
                         <el-icon v-else>
-                            <CloseBold />
+                            <CloseBold/>
                         </el-icon>
                     </div>
                 </div>
@@ -39,58 +39,70 @@
             <!-- 为 back-left 添加动态类名 -->
             <div :class="['back-left', {'slide-in':!isMenuVisible || isLargeScreen, 'slide-out': isMenuVisible &&!isLargeScreen}]">
                 <el-menu
-                    :default-active="activeIndex"
-                    class="el-menu-vertical-demo"
-                    router
-                    @select="onMenuSelect"
+                        :default-active="activeIndex"
+                        class="el-menu-vertical-demo"
+                        router
+                        @select="onMenuSelect"
                 >
                     <el-menu-item index="/admin/home">
                         <el-icon>
-                            <HomeFilled />
+                            <HomeFilled/>
                         </el-icon>
                         <span>后台主页</span>
+                    </el-menu-item>
+                    <el-menu-item index="/admin/banner">
+                        <el-icon>
+                            <PictureFilled/>
+                        </el-icon>
+                        <span>轮播图管理</span>
                     </el-menu-item>
                     <el-sub-menu index="product">
                         <template #title>
                             <el-icon>
-                                <Document />
+                                <Document/>
                             </el-icon>
                             <span>商品管理</span>
                         </template>
                         <el-menu-item index="/admin/product">商品管理</el-menu-item>
-                        <el-menu-item index="/admin/category">分类管理</el-menu-item>
+                        <!--                        <el-menu-item index="/admin/category">分类管理</el-menu-item>-->
                         <el-menu-item index="/admin/promotion">促销管理</el-menu-item>
                     </el-sub-menu>
                     <el-menu-item index="/admin/order">
                         <el-icon>
-                            <List />
+                            <List/>
                         </el-icon>
                         <span>订单管理</span>
                     </el-menu-item>
+                    <el-menu-item index="/admin/comment">
+                        <el-icon>
+                            <ChatDotSquare/>
+                        </el-icon>
+                        <span>评论管理</span>
+                    </el-menu-item>
                     <el-menu-item index="/admin/service">
                         <el-icon>
-                            <MessageBox />
+                            <ChatLineRound/>
                         </el-icon>
                         <span>客服对话</span>
                     </el-menu-item>
                     <el-menu-item index="/admin/user">
                         <el-icon>
-                            <Avatar />
+                            <Avatar/>
                         </el-icon>
                         <span>用户管理</span>
                     </el-menu-item>
-                    <el-menu-item index="/admin/setting">
-                        <el-icon>
-                            <Setting />
-                        </el-icon>
-                        <span>系统设置</span>
-                    </el-menu-item>
+                    <!--                    <el-menu-item index="/admin/setting">-->
+                    <!--                        <el-icon>-->
+                    <!--                            <Setting />-->
+                    <!--                        </el-icon>-->
+                    <!--                        <span>系统设置</span>-->
+                    <!--                    </el-menu-item>-->
                 </el-menu>
             </div>
             <div
-                v-if="!isMenuVisible &&!isLargeScreen"
-                class="overlay"
-                @click="toggleIcon"
+                    v-if="!isMenuVisible &&!isLargeScreen"
+                    class="overlay"
+                    @click="toggleIcon"
             ></div>
             <div class="main-content">
                 <router-view></router-view>
@@ -101,15 +113,16 @@
 
 <script setup>
 import {
-    CloseBold, Menu, User, Document,
-    Setting, Avatar, MessageBox, List,
+    CloseBold, Menu, Document, ChatLineRound,
+    Setting, Avatar, ChatDotSquare, List, PictureFilled,
     HomeFilled, Search
 } from '@element-plus/icons-vue';
-import { ref, onMounted, watch } from 'vue';
+import {ref, onMounted, watch} from 'vue';
 import {getCookie, parseJwt} from "@/utils/cookieJwt";
 import {ElMessage} from "element-plus";
 import Auth from "@/request/auth";
 import {useRoute} from "vue-router";
+import {server_URL} from "@/urlConfig.js";
 
 const isMenuVisible = ref(true);
 const drawer = ref(false);
@@ -135,7 +148,7 @@ const toggleIcon = () => {
 };
 
 const onMenuSelect = () => {
-    if (!isMenuVisible.value &&!isLargeScreen.value) {
+    if (!isMenuVisible.value && !isLargeScreen.value) {
         toggleIcon();
     }
 };
@@ -172,7 +185,7 @@ onMounted(() => {
 watch(isLargeScreen, (newValue) => {
     if (newValue) {
         isMenuVisible.value = false; // 视口宽度变为大于 1024px 时，强制显示菜单
-    }else {
+    } else {
         isMenuVisible.value = true;
     }
 });
@@ -190,7 +203,7 @@ watch(isLargeScreen, (newValue) => {
     height: 60px;
     background: #5a99dc;
     position: relative;
-    z-index: 7;
+    z-index: 9;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -224,12 +237,13 @@ watch(isLargeScreen, (newValue) => {
 .back-header-right {
     color: #fff;
 
-    .mobile-menu{
+    .mobile-menu {
         display: flex;
         gap: 10px;
         font-size: 24px;
     }
-    .pc-menu{
+
+    .pc-menu {
         display: flex;
         gap: 15px;
         font-size: 16px;
@@ -252,12 +266,12 @@ watch(isLargeScreen, (newValue) => {
 }
 
 .back-left {
-    width: 200px;
+    width: 150px;
     height: 100%;
     background: #fff;
-    transform: translateX(-200px); /* 初始隐藏 */
+    transform: translateX(-150px); /* 初始隐藏 */
     transition: transform 0.3s ease;
-    z-index: 6;
+    z-index: 10;
 }
 
 .slide-in {
@@ -265,7 +279,7 @@ watch(isLargeScreen, (newValue) => {
 }
 
 .slide-out {
-    transform: translateX(-200px);
+    transform: translateX(-150px);
 }
 
 .overlay {
@@ -275,7 +289,7 @@ watch(isLargeScreen, (newValue) => {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 5;
+    z-index: 8;
     display: none;
 }
 
@@ -286,6 +300,7 @@ watch(isLargeScreen, (newValue) => {
     flex-direction: column;
     align-items: center;
     gap: 1vw;
+    height: calc(100vh - 100px);
 }
 
 @media (min-width: 1025px) {
@@ -297,19 +312,20 @@ watch(isLargeScreen, (newValue) => {
         display: none; /* 视口宽度大于 1024px 时，隐藏黑幕 */
     }
 
-    .main-content{
+    .main-content {
         padding: 20px;
     }
 }
+
 @media (max-width: 1024px) {
     .back-left {
         position: fixed;
         top: 60px; /* 菜单栏高度 */
         left: 0;
         height: calc(100% - 60px); /* 减去菜单栏高度 */
-        width: 200px;
+        width: 150px;
         background: #fff;
-        z-index: 6;
+        z-index: 10;
         transition: transform 0.3s ease;
     }
 

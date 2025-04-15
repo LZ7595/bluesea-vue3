@@ -31,12 +31,36 @@
     {text: '买一送一', value: 'BUY_ONE_GET_ONE'},
     {text: '包邮免运费', value: 'FREE_SHIPPING'},
     {text: '满减优惠', value: 'REDUCE_AMOUNT'}
-        ]" :filter-method="filterTag" filter-placement="bottom-end" :formatter="formatPromotionType"
+        ]" :filter-method="filterPromotion" filter-placement="bottom-end" :formatter="formatPromotionType"
                 :width="getColWidth(160)"/>
+        <el-table-column
+                prop="status"
+                label="状态"
+                width="120"
+                :filters="[
+    { text: '待开始', value: '待开始' },
+    { text: '进行中', value: '进行中' },
+    { text: '已结束', value: '已结束' },
+                ]"
+                :filter-method="filterTag"
+                filter-placement="bottom-end"
+        >
+            <template #default="scope">
+                <el-tag
+                        :type="getPromotionStatusType(scope.row.start_time, scope.row.end_time)"
+                        disable-transitions
+                >{{ getPromotionStatus(scope.row.start_time, scope.row.end_time) }}
+                </el-tag>
+            </template>
+        </el-table-column>
         <el-table-column prop="discount_rate" label="优惠折扣(小数)" :width="getColWidth(120)"/>
         <el-table-column prop="reduce_amount" label="优惠满减" :width="getColWidth(120)"/>
         <el-table-column prop="price" label="原价" :width="getColWidth(120)"/>
         <el-table-column prop="discount_price" label="折后价" :width="getColWidth(120)"/>
+        <el-table-column prop="promotion_quantity" label="促销数量" :width="getColWidth(120)"/>
+        <el-table-column prop="per_user_limit" label="每人限购" :width="getColWidth(120)"/>
+        <el-table-column prop="stock" label="商品库存" :width="getColWidth(120)"/>
+        <el-table-column prop="promotion_stock" label="促销库存" :width="getColWidth(120)"/>
         <el-table-column prop="start_time" label="开始时间" :width="getColWidth(160)" sortable="custom"/>
         <el-table-column prop="end_time" label="结束时间" :width="getColWidth(160)" sortable="custom"/>
         <el-table-column fixed="right" label="操作" :width="getColWidth(160)">
@@ -95,7 +119,7 @@
                         <el-input v-model="form.product_name" disabled/>
                     </el-form-item>
                     <el-form-item label="商品主图" :label-width="formLabelWidth">
-                        <img :src="form.product_main_image" alt="商品主图" class="form-productMainImage"/>
+                        <img :src="server_URL + form.product_main_image" alt="商品主图" class="form-productMainImage"/>
                     </el-form-item>
                     <el-form-item label="优惠类型" :label-width="formLabelWidth">
                         <el-select
@@ -125,6 +149,18 @@
                     </el-form-item>
                     <el-form-item label="折后价" :label-width="formLabelWidth">
                         <el-input v-model="form.discount_price" autocomplete="off" disabled/>
+                    </el-form-item>
+                    <el-form-item label="优惠数量" :label-width="formLabelWidth">
+                        <el-input-number v-model="form.promotion_quantity" :min="1"
+                                         :max="isAdd.value ? form.stock : Infinity" :step="1"/>
+                    </el-form-item>
+                    <el-form-item label="每人限购" :label-width="formLabelWidth">
+                        <el-input-number v-model="form.per_user_limit" :min="1"
+                                         :step="1"/>
+                    </el-form-item>
+                    <el-form-item label="促销库存" :label-width="formLabelWidth">
+                        <el-input-number v-model="form.promotion_stock" :min="1" :max="form.stock"
+                                         :step="1"/>
                     </el-form-item>
                     <el-form-item label="开始时间" :label-width="formLabelWidth">
                         <el-date-picker
@@ -164,6 +200,7 @@ import {calculateDiscountPrice} from "@/utils/calculateDiscountPrice";
 const isAdd = ref(false); // 添加标志变量
 const isSearch = ref(false); // 搜索标志变量
 const search = ref('');
+const isRollingBack = ref(false); // 新增的标志位，用于表示是否在回退操作中
 
 const tableData = ref([]);
 // 当前使用的排序字段
@@ -197,6 +234,10 @@ const form = reactive({
     "reduce_amount": "",
     "price": "",
     "discount_price": "",
+    "stock": "",
+    "promotion_quantity": 1,
+    "per_user_limit": 1,
+    "promotion_stock": 1,
 });
 let avatarUrl = ref('');
 
@@ -214,6 +255,9 @@ const addProduct = () => {
     form.reduce_amount = '';
     form.price = '';
     form.discount_price = '';
+    form.promotion_quantity = 1;
+    form.per_user_limit = 1;
+    form.promotion_stock = 1;
     dialog.value = true;
 }
 
@@ -282,6 +326,32 @@ const pomotionTypes = ref([
     {label: '包邮免运费', value: 'FREE_SHIPPING'},
     {label: '满减优惠', value: 'REDUCE_AMOUNT'},
 ])
+const getPromotionStatus = (startTime, endTime) => {
+    const now = new Date().getTime();
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+
+    if (now < start) {
+        return '待开始';
+    } else if (now >= start && now <= end) {
+        return '进行中';
+    } else {
+        return '已结束';
+    }
+};
+const getPromotionStatusType = (startTime, endTime) => {
+    const status = getPromotionStatus(startTime, endTime);
+    switch (status) {
+        case '待开始':
+            return 'info';
+        case '进行中':
+            return 'success';
+        case '已结束':
+            return 'danger';
+        default:
+            return 'primary';
+    }
+};
 
 const SearchProduct = async () => {
     if (!isAdd.value) {
@@ -292,6 +362,8 @@ const SearchProduct = async () => {
         form.product_name = res.product_name;
         form.price = res.price;
         form.product_main_image = res.product_main_image;
+        form.stock = res.stock;
+        console.log(form)
         isSearch.value = true
     } catch (error) {
         ElMessage.error('商品查询失败：' + error.message);
@@ -409,11 +481,14 @@ const tableRowFormatter = (data) => {
     return `${data.cellValue}: table formatter`
 }
 
-const filterTag = (value, row, column) => {
+const filterPromotion = (value, row, column) => {
     // 过滤方法的具体实现
     return row[column.property] === value;
 }
-
+const filterTag = (value, row) => {
+    const actualStatus = getPromotionStatus(row.start_time, row.end_time);
+    return actualStatus === value;
+};
 const handleSortChange = ({prop, order}) => {
     // 将排序顺序转换为后端需要的格式
     sortOrder.value = order === 'ascending' ? 'ASC' : 'DESC';
@@ -457,8 +532,11 @@ const formatPromotionType = (row, column, cellValue) => {
 }
 
 import {debounce} from 'lodash-es';
+import {server_URL} from "@/urlConfig.js";
 
 const debouncedSearch = debounce(SearchAction, 300);
+
+
 const handleSizeChange = (newSize) => {
     pageSize.value = newSize;
     currentPage.value = 1; // 修改每页数量后回到第一页
@@ -509,6 +587,15 @@ watch(
         console.log(form)
     },
     {immediate: true}
+);
+watch(
+    () => form.promotion_stock,
+    (newValue, oldValue) => {
+        if (!isAdd.value) {
+            const diff = newValue - oldValue;
+            form.promotion_quantity += diff;
+        }
+    }
 );
 </script>
 

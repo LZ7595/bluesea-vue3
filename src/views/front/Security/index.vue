@@ -107,7 +107,7 @@
                                             :class="{ 'is-selected': passwordChangeMethod === 'oldPassword' }"
                                     >
                                         <span>使用旧密码修改</span>
-                                        <img src="../../../../public/icon/password.png" alt="使用旧密码修改" draggable="false" />
+                                        <img :src="server_URL + '/icon/password.png'" alt="使用旧密码修改" draggable="false" />
                                     </div>
                                     <div
                                             class="selectedMethod-item"
@@ -115,7 +115,7 @@
                                             :class="{ 'is-selected': passwordChangeMethod === 'email' }"
                                     >
                                         <span>使用邮箱验证修改</span>
-                                        <img src="../../../../public/icon/email.png" alt="使用邮箱验证修改" draggable="false" />
+                                        <img :src="server_URL + '/icon/email.png'" alt="使用邮箱验证修改" draggable="false" />
                                     </div>
                                     <div
                                             class="selectedMethod-item"
@@ -123,7 +123,7 @@
                                             :class="{ 'is-selected': passwordChangeMethod === 'phone' }"
                                     >
                                         <span>使用手机验证修改</span>
-                                        <img src="../../../../public/icon/phone.png" alt="使用手机验证修改" draggable="false" />
+                                        <img :src="server_URL + '/icon/phone.png'" alt="使用手机验证修改" draggable="false" />
                                     </div>
                                 </div>
                             </div>
@@ -219,6 +219,7 @@ import {getCookie, parseJwt} from "@/utils/cookieJwt";
 import {ElMessage} from "element-plus";
 import Auth from "@/request/auth";
 import Cookies from 'js-cookie';
+import {server_URL} from "@/urlConfig.js";
 
 const active = ref(0);
 const passwordChangeMethod = ref('');

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useLoadingStore } from '@/store/loading';
+import { useLoadingStore } from '@/store/loading.js';
 import { parseJwt } from '@/utils/cookieJwt';
 // 定义PC端路由配置
 const pcUserRouter = [
@@ -53,7 +53,12 @@ const pcUserRouter = [
                         path: "address",
                         name: "地址管理",
                         component: () => import('@/views/front/User/address/index.vue')
-                    }
+                    },
+                    {
+                        path: "order",
+                        name: "查看订单",
+                        component: () => import('@/views/front/User/order/index.vue')
+                    },
                 ]
             },
             {
@@ -65,6 +70,25 @@ const pcUserRouter = [
                 path: "security",
                 name: "安全中心",
                 component: () => import('@/views/front/Security/index.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: "order/:order_id",
+                name: "订单",
+                component: () => import('@/views/front/Order/index.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/pc/placeOrder',
+                name: 'PlaceOrder',
+                component: () => import('@/views/front/PlaceOrder/index.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/pc/about',
+                name: 'About',
+                component: () => import('@/views/front/About/index.vue'),
+                meta: { isPC: true }
             }
         ]
     },
@@ -74,12 +98,13 @@ const pcUserRouter = [
         component: () => import('@/views/front/Auth/index.vue'),
     },
     {
-        path: '/im',
+        path: '/pc/im',
         name: 'Im',
-        component: () => import("@/views/front/Im/Im.vue"),
+        component: () => import("@/views/front/Im/index.vue"),
     },
 
 ];
+console.log(pcUserRouter);
 // 定义移动端路由配置
 const mobileUserRouter = [
     {
@@ -118,6 +143,12 @@ const adminRouter = [
                 meta: { requiresAdmin: true }
             },
             {
+                path: 'banner',
+                name: "轮播图管理",
+                component: () => import('@/views/back/Banner/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
                 path: 'product',
                 name: "商品管理",
                 component: () => import('@/views/back/Product/index.vue'),
@@ -127,6 +158,12 @@ const adminRouter = [
                 path: 'order',
                 name: "订单管理",
                 component: () => import('@/views/back/Order/index.vue'),
+                meta: { requiresAdmin: true }
+            },
+            {
+                path: 'comment',
+                name: "评论管理",
+                component: () => import('@/views/back/Comment/index.vue'),
                 meta: { requiresAdmin: true }
             },
             {
@@ -265,8 +302,7 @@ router.beforeEach((to, from, next) => {
             }
         });
 
-        if (targetRoute) {
-            // 检查该路由是否需要登录
+        if (targetRoute) {// 检查该路由是否需要登录
             if (to.meta.requiresAuth &&!isUserLoggedIn()) {
                 // 如果需要登录且用户未登录，重定向到登录页面
                 next({ path: '/pc/Auth/Login' });
@@ -289,3 +325,4 @@ router.beforeEach((to, from, next) => {
 });
 
 export default router;
+export { updateRoutesByDevice,getUserRole };

@@ -3,7 +3,7 @@ import request from '@/request/request'
 // 获取聊天记录
 export const findMessageBySendUserAndReceiveUser = async (sendUserId, receiveUserId) => {
     try {
-        const response = await request.get(`api/message/findMessageBySendUserAndReceiveUser`, {
+        const response = await request.get(`/api/message/findMessageBySendUserAndReceiveUser`, {
             params: {
                 sendUserId,
                 receiveUserId
@@ -19,7 +19,7 @@ export const findMessageBySendUserAndReceiveUser = async (sendUserId, receiveUse
 // 搜索用户聊天表单信息
 export const searchUserForForm = async (userId, searchUserName) => {
     try {
-        const response = await request.get(`api/message/searchUserForForm`, {
+        const response = await request.get(`/api/message/searchUserForForm`, {
             params: {
                 loginUserId:userId,
                 searchUserName:searchUserName

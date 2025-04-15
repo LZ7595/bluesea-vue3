@@ -13,13 +13,13 @@
                         <li v-else class="user-info">
                             <router-link to="/pc/user">
                                 <p>{{ userData.username }}</p>
-                                <img class="arrow" src="/icon/topArrow.svg" alt="箭头"/>
+                                <img class="arrow" :src="server_URL + '/icon/topArrow.svg'" alt="箭头"/>
                             </router-link>
                         </li>
                         <div class="user-info-content" v-if="isLogin">
                             <div class="user-info-content-go">
                                 <div class="user-info-avatar">
-                                    <el-avatar :icon="UserFilled" :src="userInfo.avatar" :size="70"/>
+                                    <el-avatar :icon="UserFilled" :src="server_URL + userInfo.avatar" :size="70"/>
                                 </div>
                                 <div class="user-info-content-div">
                                     <div>
@@ -40,7 +40,7 @@
                             <router-link to="/pc/cart">购物车</router-link>
                         </li>
                         <li>
-                            <router-link to="/pc/order">我的订单</router-link>
+                            <router-link to="/pc/user/order">我的订单</router-link>
                         </li>
                         <li>
                             <router-link to="/pc/user">账号设置</router-link>
@@ -54,7 +54,7 @@
                 <div class="search-logo">
                     <router-link to="/pc/home">
                         <div class="logo">
-                            <img src="/icon/logo1.png" alt=""/>
+                            <img :src="server_URL + '/icon/logo1.png'" alt=""/>
                         </div>
                     </router-link>
                     <Search/>
@@ -67,7 +67,7 @@
                 <div class="foot-content">
                     <div class="foot-content-service">
                         <div class="foot-content-service-item" v-for="(item,index) in footServiceList" :key="index">
-                            <img :src="item.img" alt="" class="foot-content-service-item-icon"/>
+                            <img :src="server_URL + item.img" alt="" class="foot-content-service-item-icon"/>
                             <div class="foot-content-service-item-text">
                                 <p class="row1">{{ item.name }}</p>
                                 <p class="row2">{{ item.text }}</p>
@@ -101,12 +101,13 @@ import {ref} from "vue";
 import {ElMessage} from "element-plus";
 import userRes from "@/request/user";
 import {UserFilled} from "@element-plus/icons-vue";
+import {server_URL} from "@/urlConfig.js";
 
 const footBarList = ref([
     {name: '首页', url: '/pc/home'},
-    {name: '关于我们', url: ''},
-    {name: '联系我们', url: ''},
-    {name: '加入我们', url: ''},
+    {name: '关于我们', url: '/pc/about'},
+    {name: '联系我们', url: '/pc/about'},
+    {name: '加入我们', url: '/pc/about'},
     {name: '管理后台', url: '/admin'}
 ]);
 

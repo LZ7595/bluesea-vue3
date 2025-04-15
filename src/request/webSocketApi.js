@@ -3,7 +3,7 @@ import request from '@/request/request';
 // 发送信息
 export function sendMessageTo (data) {
     return request({
-        url: 'api/message/sendMessage',
+        url: '/api/message/sendMessage',
         method: 'post',
         data: data
     });
@@ -20,7 +20,7 @@ export function getOnLineUser () {
 // 发送信息给所有人
 export function sendMessageAll (message) {
     return request({
-        url: 'api/message/sendMessageAll',
+        url: '/api/message/sendMessageAll',
         method: 'get',
         params: {
             message

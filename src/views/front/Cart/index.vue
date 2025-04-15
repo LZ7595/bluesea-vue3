@@ -7,8 +7,8 @@
                     全选
                     <input type="checkbox" :checked="allSelected" @change="toggleSelectAll"/>
                 </div>
-                <div class="shop-car-img">商品图片</div>
-                <div class="shop-car-name">商品名称</div>
+                <div class="shop-car-img" style="cursor: default">商品图片</div>
+                <div class="shop-car-name" style="cursor: default">商品名称</div>
                 <div class="shop-car-price-tips">商品价格</div>
                 <div class="shop-car-comment">操作</div>
                 <div class="shop-car-sub-total">小计</div>
@@ -17,29 +17,33 @@
 
             <Empty v-if="Array.isArray(shopCarList) && shopCarList.length === 0"/>
 
-            <li v-for="(item, index) in shopCarList" :key="index" class="shop-car-item">
+            <li v-for="(item, index) in shopCarList" :key="index" class="shop-car-item"
+                :class="{ 'sold-out': item.stock === 0 }">
                 <div class="shop-car-select">
                     <input type="checkbox" :checked="item.is_selected || false"
                            @change="() => toggleSelectItem(item.cart_id)"/>
                 </div>
-                <div class="shop-car-img">
-                    <img :src="item.product_main_image"/>
+                <div class="shop-car-img" @click="goProductDetails(item.product_id)">
+                    <img :src="server_URL + item.product_main_image"/>
                 </div>
-                <div class="shop-car-name" :title="item.product_name">
+                <div class="shop-car-name" :title="item.product_name" @click="goProductDetails(item.product_id)">
                     {{ item.product_name }}
+                    <span v-if="item.stock === 0" class="sold-out-tip">已售空</span>
                 </div>
                 <div class="shop-car-price-tips">
-                    ￥<span>{{ item.discount_price ? item.discount_price : item.price }}</span>
+                    ￥<span>{{ item.price }}</span>
                 </div>
                 <div class="shop-car-comment">
-                    <button @click="minusCount(item.cart_id)">-</button>
-                    <input v-model="item.quantity" @change="(e) => handleCountChange(e, item.cart_id)"/>
-                    <button @click="addCount(item.cart_id)">+</button>
+                    <button @click="minusCount(item.cart_id)" :disabled="item.stock === 0">-</button>
+                    <input v-model="item.quantity" @change="(e) => handleCountChange(e, item.cart_id)"
+                           :disabled="item.stock === 0"/>
+                    <button @click="addCount(item.cart_id)" :disabled="item.stock === 0">+</button>
                 </div>
                 <div class="shop-car-sub-total">
                     ￥<span>{{ calculateSubTotal(item).toFixed(2) }}</span>
                 </div>
                 <div class="shop-car-del">
+                    <!-- 移除删除按钮的禁用状态 -->
                     <a @click="removeShopCarAction(item.cart_id)">删除</a>
                 </div>
             </li>
@@ -51,14 +55,15 @@
                 <span>{{ saleTotal || 0 }}</span>
             </div>
             <div class="submit">
-                <button>结算</button>
+                <!-- 绑定结算按钮的点击事件 -->
+                <button @click="checkout">结算</button>
             </div>
         </div>
     </div>
     <el-dialog
-        v-model="dialogVisible"
-        title="删除购物车"
-        width="500"
+            v-model="dialogVisible"
+            title="删除购物车"
+            width="500"
     >
         <span>这么好的商品，您确定要删除它吗？</span>
         <template #footer>
@@ -77,15 +82,21 @@ import {ref, computed, onMounted} from 'vue';
 import Empty from '@/components/pc/common/empty.vue';
 import cartRes from "@/request/shoppingCart";
 import {ElMessage} from "element-plus";
+import {useRouter} from 'vue-router';
+import {server_URL} from "@/urlConfig.js"; // 引入路由钩子
 
-const dialogVisible = ref(false)
+const router = useRouter(); // 获取路由实例
+const dialogVisible = ref(false);
 const currentCartId = ref(null);
-const userData = ref(JSON.parse(localStorage.getItem('UserData')))
-const userId = ref(userData.value.id)
+const userData = ref(JSON.parse(localStorage.getItem('UserData')));
+const userId = ref(userData.value.id);
 // 模拟购物车列表数据
 const shopCarList = ref([]);
-const isSelected = ref(null)
+const isSelected = ref(null);
 
+const goProductDetails = (productId) => {
+    router.push({name: '详情', params: {product_id: productId}});
+};
 const updateSelectedStatus = async (cartId, is_selected) => {
     try {
         const res = await cartRes.updateSelectedStatus(cartId, is_selected);
@@ -94,9 +105,9 @@ const updateSelectedStatus = async (cartId, is_selected) => {
         }
     } catch (e) {
         ElMessage.error('更新失败');
-        console.log(e)
+        console.log(e);
     }
-}
+};
 
 const updateAllSelectedStatus = async (selectedList) => {
     try {
@@ -106,13 +117,13 @@ const updateAllSelectedStatus = async (selectedList) => {
         }
     } catch (e) {
         ElMessage.error('更新失败');
-        console.log(e)
+        console.log(e);
     }
-}
+};
 
 // 全选状态
 const allSelected = computed(() => {
-    return Array.isArray(shopCarList.value) && shopCarList.value.every(item => item.is_selected);
+    return Array.isArray(shopCarList.value) && shopCarList.value.filter(item => item.stock !== 0).every(item => item.is_selected);
 });
 
 // 全选/反选
@@ -120,10 +131,12 @@ const toggleSelectAll = () => {
     const isAllChecked = allSelected.value;
     const selectedList = [];
     shopCarList.value.forEach(item => {
-        item.is_selected = !isAllChecked;
-        selectedList.push({cartId: item.cart_id, isSelected: item.is_selected ? 1 : 0});
+        if (item.stock !== 0) {
+            item.is_selected = !isAllChecked;
+            selectedList.push({cartId: item.cart_id, isSelected: item.is_selected ? 1 : 0});
+        }
     });
-    updateAllSelectedStatus(selectedList)
+    updateAllSelectedStatus(selectedList);
 };
 
 // 单选商品
@@ -132,7 +145,9 @@ const toggleSelectItem = (cartId) => {
     if (item) {
         item.is_selected = !item.is_selected;
         isSelected.value = item.is_selected ? 1 : 0;
-        updateSelectedStatus(cartId, isSelected.value)
+        if (item.stock !== 0) {
+            updateSelectedStatus(cartId, isSelected.value);
+        }
     }
 };
 
@@ -148,15 +163,16 @@ const updateQuantity = async (cartId, quantity) => {
     }
 };
 
-
 // 减少商品数量
 const minusCount = (cartId) => {
     const item = shopCarList.value.find(item => item.cart_id === cartId);
     if (item && item.quantity > 1) {
         item.quantity--;
-        updateQuantity(cartId, item.quantity);
+        if (item.stock !== 0) {
+            updateQuantity(cartId, item.quantity);
+        }
     } else {
-        ElMessage.error('数量不能小于1')
+        ElMessage.error('数量不能小于1');
     }
 };
 
@@ -167,7 +183,7 @@ const addCount = (cartId) => {
         item.quantity++;
         updateQuantity(cartId, item.quantity);
     } else {
-        ElMessage.error('库存不足')
+        ElMessage.error('库存不足');
     }
 };
 
@@ -177,10 +193,12 @@ const handleCountChange = (e, cartId) => {
     const item = shopCarList.value.find(item => item.cart_id === cartId);
     if (item && !isNaN(newCount) && newCount > 0 && newCount <= item.stock) {
         item.quantity = newCount;
-        updateQuantity(cartId, item.quantity);
+        if (item.stock !== 0) {
+            updateQuantity(cartId, item.quantity);
+        }
     } else {
-        item.quantity = 1
-        ElMessage.error('数量不能小于1')
+        item.quantity = 1;
+        ElMessage.error('数量不能小于1');
     }
 };
 
@@ -227,12 +245,17 @@ const saleTotal = computed(() => {
         : 0;
 });
 
-
 const getCartList = async () => {
     try {
-        const res = await cartRes.getCartList(userId.value)
+        const res = await cartRes.getCartList(userId.value);
         shopCarList.value = res;
-        console.log(res)
+        console.log(res);
+        // 检查售空且选中的商品并取消选中
+        const soldOutAndSelected = shopCarList.value.filter(item => item.stock === 0 && item.is_selected);
+        soldOutAndSelected.forEach(async (item) => {
+            item.is_selected = false;
+            await updateSelectedStatus(item.cart_id, 0);
+        });
     } catch (error) {
         console.error(error);
     }
@@ -240,8 +263,70 @@ const getCartList = async () => {
 
 onMounted(() => {
     getCartList();
-})
+});
+
+// 结算函数
+const checkout = async () => {
+    try {
+        const selectedItems = shopCarList.value.filter(item => item.is_selected);
+        if (selectedItems.length === 0) {
+            ElMessage.error('请选择要结算的商品');
+            return;
+        }
+
+        const orderItems = selectedItems.map(item => ({
+            productId: item.product_id,
+            quantity: item.quantity,
+            unitPrice: item.price
+        }));
+
+        const orderData = {
+            userId: userId.value,
+            orderItems
+        };
+
+        // 跳转到确认订单页，并传递订单数据
+        router.push({
+            name: 'PlaceOrder',
+            query: {
+                orderData: JSON.stringify(orderData)
+            }
+        });
+    } catch (error) {
+        console.error('跳转到确认订单页失败:', error);
+        ElMessage.error('操作失败，请稍后重试');
+    }
+};
 </script>
+
+<style scoped>
+.sold-out {
+    opacity: 0.5; /* 降低透明度 */
+    pointer-events: none; /* 禁用鼠标事件 */
+}
+
+.sold-out input[type="checkbox"],
+.sold-out button,
+.sold-out a {
+    cursor: not-allowed; /* 改变鼠标指针样式 */
+}
+
+.sold-out-tip {
+    color: red; /* 设置文字颜色为红色 */
+    margin-left: 5px; /* 与商品名称间隔一定距离 */
+}
+
+/* 允许删除按钮有鼠标交互 */
+.sold-out .shop-car-del a {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.shop-car-img, .shop-car-name {
+    cursor: pointer;
+    pointer-events: auto;
+}
+</style>
 
 <style scoped>
 .shop-car-list-container {
@@ -273,6 +358,7 @@ onMounted(() => {
                 text-align: center;
                 align-items: center;
                 justify-content: center;
+                cursor: pointer;
 
                 img {
                     width: 100%;
@@ -290,6 +376,7 @@ onMounted(() => {
                 -webkit-box-orient: vertical;
                 font-weight: bold;
                 word-break: break-all;
+                cursor: pointer;
             }
 
             .shop-car-price-tips {

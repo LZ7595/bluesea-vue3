@@ -18,7 +18,7 @@
                 content="客服"
                 placement="left"
         >
-            <router-link to="/im">
+            <router-link to="/pc/im">
                 <div class="quick-action-item">
                     <el-icon>
                         <ChatLineRound/>

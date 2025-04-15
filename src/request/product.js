@@ -36,6 +36,20 @@ const productRes = {
         }).catch(err => {
             return Promise.reject(err);
         })
+    },
+    fetchProductsInfo:(productIds,userId)=>{
+        return request({
+            url: '/api/product/batch',
+            method: 'post',
+            data: productIds,
+            params: {
+                userId: userId
+            }
+        }).then(res => {
+            return res.data
+        }).catch(err => {
+            return err
+        })
     }
 
 }

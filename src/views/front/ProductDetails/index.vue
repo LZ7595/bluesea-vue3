@@ -22,7 +22,9 @@
                         <div class="productDetails-content">
                             <div class="productDetails-data">
                                 <p class="data-name">{{ product_name }}<!-- 如果有折扣，显示限时抢购提示 -->
-                                    <el-tag v-if="hasDiscount" style="margin-left: 20px" type="danger" effect="dark">限时抢购</el-tag>
+                                    <el-tag v-if="hasDiscount" style="margin-left: 20px" type="danger" effect="dark">
+                                        限时抢购
+                                    </el-tag>
                                 </p>
                                 <div>
                                     <p>
@@ -39,10 +41,15 @@
                                 </div>
                             </div>
                             <div class="productDetails-actions">
-                                <el-input-number v-model="payNum" :min="1" :max="stock"/>
+                                <el-input-number v-model="payNum" :min="1" :max="stock" v-if="stock"/>
                                 <div>
-                                    <el-button type="primary" size="large" plain @click="addMyCart(product_id)">加入购物车</el-button>
-                                    <el-button type="primary" size="large">立即购买</el-button>
+                                    <el-button type="primary" size="large" plain @click="addMyCart(product_id)"
+                                               :disabled="!stock">
+                                        加入购物车
+                                    </el-button>
+                                    <el-button type="primary" size="large" @click="buyNow(product_id)"
+                                               :disabled="!stock">立即购买
+                                    </el-button>
                                 </div>
                             </div>
                         </div>
@@ -63,7 +70,28 @@
                                     <el-descriptions-item label="描述">{{ description }}</el-descriptions-item>
                                 </el-descriptions>
                             </el-tab-pane>
-                            <el-tab-pane label="商品评价">商品评价</el-tab-pane>
+                            <el-tab-pane label="商品评价">
+                                <div v-if="comment.length > 0">
+                                <h1>商品评价</h1>
+                                <div class="review-list">
+                                    <div class="review-card" v-for="review in comment" :key="review.review_id">
+                                        <ReviewCard :review="review"/>
+                                    </div>
+                                </div>
+                                <div class="pagination">
+                                    <el-pagination
+                                            v-model:current-page="currentPage"
+                                            :total="commentNum"
+                                            v-model:page-size="pageSize"
+                                            layout="prev, pager, next"
+                                            @current-change="handleCurrentChange"
+                                    />
+                                </div>
+                                </div>
+                                <div v-else>
+                                    <h1>暂无评价</h1>
+                                </div>
+                            </el-tab-pane>
                         </el-tabs>
                     </div>
                 </div>
@@ -73,14 +101,18 @@
 </template>
 
 <script setup>
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import {ArrowRight} from "@element-plus/icons-vue";
 import productRes from "@/request/product";
 import {computed, onMounted, ref, watch} from "vue";
 import Carousel from "@/components/pc/product/Carousel.vue";
+import ReviewCard from "@/components/pc/review/reviewCard.vue";
 import cartRes from "@/request/shoppingCart";
+import {ElMessage} from "element-plus";
+import commentApi from "@/request/comment.js";
 
 const route = useRoute();
+const router = useRouter();
 const product_id = route.params.product_id;
 const productData = ref({});
 const flashSaleData = ref({});
@@ -89,6 +121,13 @@ const loading = ref(true);
 const error = ref('');
 const payNum = ref(1);
 const user_id = ref(null);
+const comment = ref([]);
+const commentNum = ref(0);
+// 每页显示的商品数量，初始为 10 条
+const pageSize = ref(10);
+// 商品的总记录数，初始为 0
+const total = ref(0);
+const currentPage = ref(1);
 const addMyCart = async (product_id) => {
     try {
         user_id.value = JSON.parse(localStorage.getItem('UserData')).id
@@ -98,6 +137,10 @@ const addMyCart = async (product_id) => {
         console.log(e)
     }
 }
+const handleCurrentChange = (newPage) => {
+    currentPage.value = newPage;
+    getComment();
+};
 const getProductDetails = async () => {
     try {
         const res = await productRes.getProudctDetails(product_id);
@@ -112,8 +155,49 @@ const getProductDetails = async () => {
     }
 };
 
+const getComment = async () => {
+    try {
+        await commentApi.getCommentByProductId(product_id, currentPage.value, pageSize.value).then(res => {
+            comment.value = res.data.reviews;
+            commentNum.value = res.data.total;
+        })
+    } catch (err) {
+        console.error(err);
+        error.value = '获取产品详情时出错，请稍后重试';
+        loading.value = false;
+    }
+}
+
+const buyNow = async (productId) => {
+    try {
+        user_id.value = JSON.parse(localStorage.getItem('UserData')).id;
+        const orderData = {
+            userId: user_id.value,
+            orderItems: [
+                {
+                    productId: Number(productId),
+                    quantity: 1,
+                    unitPrice: price.value,
+                }
+            ]
+        };
+
+        // 跳转到确认订单页，并传递订单数据
+        router.push({
+            name: 'PlaceOrder',
+            query: {
+                orderData: JSON.stringify(orderData)
+            }
+        });
+    } catch (error) {
+        console.error('跳转到确认订单页失败:', error);
+        ElMessage.error('操作失败，请稍后重试');
+    }
+};
+
 onMounted(() => {
     getProductDetails();
+    getComment();
 });
 
 const product_name = computed(() => productData.value.product_name);
@@ -141,8 +225,9 @@ const stock = computed(() => productData.value.stock);
 </script>
 <style lang="scss" scoped>
 .productDetails-pages {
-  height: 100vh;
+  min-height: 100vh;
   background-color: #f6f6f6;
+  padding-bottom: 45px;
 
   .productDetails-Breadcrumb {
     padding: 15px 0;
@@ -217,6 +302,21 @@ const stock = computed(() => productData.value.stock);
         .info-select {
           width: 100%;
           height: 80px;
+        }
+
+        .review-list {
+          .review-card {
+            width: 100%;
+            padding: 15px 10px;
+
+            &:not(:last-child)::after {
+              content: '';
+              display: block;
+              height: 1px;
+              background-color: #e0e0e0;
+              margin-top: 15px;
+            }
+          }
         }
       }
     }

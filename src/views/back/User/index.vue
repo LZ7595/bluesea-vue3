@@ -169,7 +169,7 @@
                     >
                         <img
                                 v-if="form.avatar"
-                                :src="form.avatar"
+                                :src="getImageSrc(form.avatar)"
                                 class="avatar"
                                 @click="handlePictureCardPreview($event, form.avatar)"/>
                         <el-icon v-else class="avatar-uploader-icon">
@@ -207,10 +207,22 @@ const dialogVisible = ref(false);
 const isAdd = ref(false); // 添加标志变量
 const fileToUpload = ref(null);
 
-const handlePictureCardPreview = (event, url) => {
-    event.stopPropagation(); // 阻止事件冒泡
-    dialogImageUrl.value = url;
+const handlePictureCardPreview = (event,url) => {
+    event.stopPropagation();
+    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+        dialogImageUrl.value = url;
+    } else {
+        dialogImageUrl.value = server_URL + url;
+    }
     dialogVisible.value = true;
+};
+
+// 根据 file.url 判断是否为 blob 或 data 格式，返回正确的图片 src
+const getImageSrc = (url) => {
+    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+        return url;
+    }
+    return server_URL + url;
 };
 
 const search = ref('');
@@ -310,8 +322,6 @@ const handleFileChange = (file, fileList) => {
         reader.onload = (e) => {
             form.avatar = e.target.result;
             fileToUpload.value = file.raw;
-            console.log(fileToUpload.value);
-            console.log(form.avatar)
         };
         reader.readAsDataURL(file.raw);
     }
@@ -396,7 +406,6 @@ const onClick = async () => {
             console.log(uploadResponse);
             avatarUrl.value = uploadResponse;
         }
-        let response;
         if (avatarUrl.value) {
             form.avatar = avatarUrl.value;
         }
@@ -498,6 +507,7 @@ const SearchAction = async () => {
 };
 
 import {debounce} from 'lodash-es';
+import {server_URL} from "@/urlConfig.js";
 const debouncedSearch = debounce(SearchAction, 300);
 const handleSizeChange = (newSize) => {
     pageSize.value = newSize;

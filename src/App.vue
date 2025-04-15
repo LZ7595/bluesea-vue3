@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-import {useLoadingStore} from './store/loading';
+import {useLoadingStore} from './store/loading.js';
 import {ref, onMounted, watch} from 'vue';
 import { useScrollStore } from './store/common';
 

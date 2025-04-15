@@ -1,7 +1,7 @@
 <template>
     <div class="goodItem">
         <router-link class="picbox" :to="`/pc/productDetails/${product_id}`">
-            <img :src="image_url" :alt="product_name" class="goodItem-img">
+            <img :src="server_URL + image_url" :alt="product_name" class="goodItem-img">
         </router-link>
         <div class="title">
             <router-link :to="`/pc/productDetails/${product_id}`">{{ quality + "新 " + product_name }}</router-link>
@@ -14,7 +14,7 @@
         <div class="goodItem-bottom">
             <button class="addCart" @click="addMyCart(product_id)">加入购物车</button>
             <i class="line"></i>
-            <button class="buyNow">立即购买</button>
+            <button class="buyNow" @click="buyNow(product_id)" >立即购买</button>
         </div>
     </div>
 </template>
@@ -23,6 +23,9 @@
 import {computed, defineOptions, defineProps, ref} from 'vue';
 import cartRes from "@/request/shoppingCart";
 import {ElMessage} from "element-plus";
+import {useRouter} from "vue-router";
+import {server_URL} from "@/urlConfig.js";
+const router = useRouter();
 
 const props = defineProps({
     goodItem: {
@@ -49,6 +52,32 @@ const price = computed(() => props.goodItem.productPromotion ? props.goodItem.pr
 // 计算属性判断是否有折扣
 const hasDiscount = computed(() => props.goodItem.productPromotion && props.goodItem.productPromotion.discount_price);
 
+const buyNow = async (productId) => {
+    try {
+        user_id.value = JSON.parse(localStorage.getItem('UserData')).id;
+        const orderData = {
+            userId: user_id.value,
+            orderItems: [
+                {
+                    productId: productId,
+                    quantity: 1,
+                    unitPrice: price.value,
+                }
+            ]
+        };
+
+        // 跳转到确认订单页，并传递订单数据
+        router.push({
+            name: 'PlaceOrder',
+            query: {
+                orderData: JSON.stringify(orderData)
+            }
+        });
+    } catch (error) {
+        console.error('跳转到确认订单页失败:', error);
+        ElMessage.error('操作失败，请稍后重试');
+    }
+};
 defineOptions({
     name: 'goodItem'
 })

@@ -7,12 +7,13 @@
                 <p>抱歉，您访问的页面不存在或已被删除。</p>
                 <router-link to="/">返回首页</router-link>
             </div>
-            <img class="NotFoundPage-img" src="../../public/icon/404.png">
+            <img class="NotFoundPage-img" :src="server_URL + '/icon/404.png'">
         </div>
     </div>
 </template>
 
 <script setup>
+import {server_URL} from "@/urlConfig.js";
 </script>
 
 <style lang="scss" scoped>

@@ -7,11 +7,11 @@
                         <div class="user-page-content-left-item">
                             <h3>我的订单</h3>
                             <ul>
-                                <li><a href="#">全部订单</a></li>
-                                <li><a href="#">待付款</a></li>
-                                <li><a href="#">待收货</a></li>
-                                <li><a href="#">待评价</a></li>
-                                <li><a href="#">退货/退款</a></li>
+                                <li><router-link :to="{ path: '/pc/user/order', query: { tab: 'first' } }">全部订单</router-link></li>
+                                <li><router-link :to="{ path: '/pc/user/order', query: { tab: 'second' } }">待付款</router-link></li>
+                                <li><router-link :to="{ path: '/pc/user/order', query: { tab: 'third' } }">待收货</router-link></li>
+                                <li><router-link :to="{ path: '/pc/user/order', query: { tab: 'fourth' } }">已完成</router-link></li>
+                                <li><router-link :to="{ path: '/pc/user/order', query: { tab: 'fifth' } }">退货/退款</router-link></li>
                             </ul>
                         </div>
                         <div class="user-page-content-left-item">
@@ -24,14 +24,14 @@
                         <div class="user-page-content-left-item">
                             <h3>我的地址</h3>
                             <ul>
-                                <li><a href="#">收货地址</a></li>
+                                <li><router-link to="/pc/user/address">收货地址</router-link></li>
                             </ul>
                         </div>
                         <div class="user-page-content-left-item">
                             <h3>我的账户</h3>
                             <ul>
-                                <li><a href="#">个人信息</a></li>
-                                <li><a href="#">账户安全</a></li>
+                                <li><router-link :to="{ path: '/pc/user', query: { tab: 'first' } }">个人信息</router-link></li>
+                                <li><router-link :to="{ path: '/pc/user', query: { tab: 'second' } }">账户安全</router-link></li>
                             </ul>
                         </div>
                     </div>

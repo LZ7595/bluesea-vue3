@@ -1,10 +1,11 @@
 <template>
     <div class="LoginAndRegister">
-        <div class="shell">
-            <div id="a-container" :class="['container', 'a-container', { 'is-txl': isTxl }]">
-                <form id="a-form" action="" class="form" method="">
-                    <h2 class="form_title title">创建账号</h2>
-                    <span class="form_item">
+        <div class="LoginAndRegister-div">
+            <div class="shell">
+                <div id="a-container" :class="['container', 'a-container', { 'is-txl': isTxl }]">
+                    <form id="a-form" action="" class="form" method="">
+                        <h2 class="form_title title">创建账号</h2>
+                        <span class="form_item">
                         <label>用户名:</label>
                         <div class="form_item_content">
                             <input v-model="username" @input="validateUsername" class="form_input" maxlength="16"
@@ -12,7 +13,7 @@
                             <span class="form_tip">{{ usernameError }}</span>
                         </div>
                     </span>
-                    <span class="form_item">
+                        <span class="form_item">
                         <label>邮箱:</label>
                         <div class="form_item_content">
                             <input v-model="email" @input="validateEmail" class="form_input email_input"
@@ -20,18 +21,18 @@
                             <span class="form_tip">{{ emailError }}</span>
                         </div>
                     </span>
-                    <span class="form_item">
+                        <span class="form_item">
                         <label>验证码:</label>
                         <div class="form_item_content">
                             <span class="form_inputSpan">
                                 <input v-model="code" @input="validateCode" class="form_input code_input"
                                        placeholder="请输入验证码" type="password"/>
-                                <SendCodeBtn :email="email" />
+                                <SendCodeBtn :email="email"/>
                             </span>
                             <span class="form_tip">{{ codeError }}</span>
                         </div>
                     </span>
-                    <span class="form_item">
+                        <span class="form_item">
                         <label>密码:</label>
                         <div class="form_item_content">
                             <input v-model="password" @input="validatePassword" class="form_input" placeholder="密码"
@@ -39,79 +40,86 @@
                             <span class="form_tip">{{ passwordError }}</span>
                         </div>
                     </span>
-                    <button class="form_button button submit" @click.prevent="onRegister">
-                        注 册
-                    </button>
-                </form>
-            </div>
+                        <button class="form_button button submit" @click.prevent="onRegister">
+                            注 册
+                        </button>
+                    </form>
+                </div>
 
-            <div id="b-container" :class="[
+                <div id="b-container" :class="[
                 'container',
                 'b-container',
                 { 'is-txl': isTxl },
                 { 'is-z': isZ },
             ]">
-                <form id="b-form" action="" class="form" method="">
-                    <h2 class="form_title title">登入账号</h2>
-                    <div class="type_select">
+                    <form id="b-form" action="" class="form" method="">
+                        <h2 class="form_title title">登入账号</h2>
+                        <div class="type_select">
                         <span v-for="(item, index) in items" :key="index" :class="{ active: currentIndex === index }"
                               @click="selectItem(index)">
                             {{ item }}
                         </span>
+                        </div>
+
+                        <transition mode="out-in" name="zoom">
+                            <component :is="getComponentName"
+                                       :username="username0"
+                                       :password="password0"
+                                       :email="email0"
+                                       :code="code0"
+                                       :usernameError="usernameError0"
+                                       :passwordError="passwordError0"
+                                       :emailError="emailError0"
+                                       :codeError="codeError0"
+                                       @update:username="username0 = $event"
+                                       @update:password="password0 = $event"
+                                       @update:email="email0 = $event"
+                                       @update:code="code0 = $event"
+                                       @update:usernameError="usernameError0 = $event"
+                                       @update:passwordError="passwordError0 = $event"
+                                       @update:emailError="emailError0 = $event"
+                                       @update:codeError="codeError0 = $event"
+                            />
+                        </transition>
+                        <button class="form_button button submit" @click.prevent="onLogin">
+                            登 录
+                        </button>
+                    </form>
+                </div>
+
+                <div id="switch-cnt" :class="['switch', { 'is-txr': isTxr }, { 'is-gx': isGx }]">
+                    <div :class="['switch_circle', { 'is-txr': isTxr }]"></div>
+                    <div :class="['switch_circle', 'switch_circle-t', { 'is-txr': isTxr }]"></div>
+                    <div id="switch-c1" :class="['switch_container', { 'is-hidden': isHidden }]">
+                        <h2 class="switch_title title" style="letter-spacing: 0">
+                            Welcome Back！
+                        </h2>
+                        <p class="switch_description description">
+                            已经有账号了嘛，去登入账号来进入蓝海商城购物吧！！！
+                        </p>
+                        <button class="switch_button button switch-btn" @click="changeForm">
+                            SIGN IN
+                        </button>
                     </div>
 
-                    <transition mode="out-in" name="zoom">
-                        <component :is="getComponentName"
-                                   :username="username0"
-                                   :password="password0"
-                                   :email="email0"
-                                   :code="code0"
-                                   :usernameError="usernameError0"
-                                   :passwordError="passwordError0"
-                                   :emailError="emailError0"
-                                   :codeError="codeError0"
-                                   @update:username="username0 = $event"
-                                   @update:password="password0 = $event"
-                                   @update:email="email0 = $event"
-                                   @update:code="code0 = $event"
-                                   @update:usernameError="usernameError0 = $event"
-                                   @update:passwordError="passwordError0 = $event"
-                                   @update:emailError="emailError0 = $event"
-                                   @update:codeError="codeError0 = $event"
-                        />
-                    </transition>
-                    <button class="form_button button submit" @click.prevent="onLogin">
-                        登 录
-                    </button>
-                </form>
+                    <div id="switch-c2" :class="['switch_container', { 'is-hidden':!isHidden }]">
+                        <h2 class="switch_title title" style="letter-spacing: 0">
+                            Hello Friend！
+                        </h2>
+                        <p class="switch_description description">
+                            去注册一个账号，让我们一起进入蓝海商城购物吧！！！
+                        </p>
+                        <button class="switch_button button switch-btn" @click="changeForm">
+                            SIGN UP
+                        </button>
+                    </div>
+                </div>
             </div>
-
-            <div id="switch-cnt" :class="['switch', { 'is-txr': isTxr }, { 'is-gx': isGx }]">
-                <div :class="['switch_circle', { 'is-txr': isTxr }]"></div>
-                <div :class="['switch_circle', 'switch_circle-t', { 'is-txr': isTxr }]"></div>
-                <div id="switch-c1" :class="['switch_container', { 'is-hidden': isHidden }]">
-                    <h2 class="switch_title title" style="letter-spacing: 0">
-                        Welcome Back！
-                    </h2>
-                    <p class="switch_description description">
-                        已经有账号了嘛，去登入账号来进入奇妙世界吧！！！
-                    </p>
-                    <button class="switch_button button switch-btn" @click="changeForm">
-                        SIGN IN
-                    </button>
-                </div>
-
-                <div id="switch-c2" :class="['switch_container', { 'is-hidden':!isHidden }]">
-                    <h2 class="switch_title title" style="letter-spacing: 0">
-                        Hello Friend！
-                    </h2>
-                    <p class="switch_description description">
-                        去注册一个账号，成为尊贵的粉丝会员，让我们踏入奇妙的旅途！
-                    </p>
-                    <button class="switch_button button switch-btn" @click="changeForm">
-                        SIGN UP
-                    </button>
-                </div>
+            <div class="copyright">
+                <!--            <p>Copyright © 2024-2025 Blue Ocean Technology Co., Ltd. All rights reserved.</p>-->
+                <p>本页面借鉴B站UP主 <a
+                        href="https://space.bilibili.com/266664645?spm_id_from=333.337.search-card.all.click">山羊の前端小窝</a>
+                </p>
             </div>
         </div>
     </div>
@@ -135,11 +143,12 @@ export default {
 import {computed, watch, ref, onMounted} from "vue";
 import Auth from "@/request/auth";
 import {ElMessage} from "element-plus";
+import {updateRoutesByDevice, getUserRole} from '@/router';
 import {validateEmail, validateUsername, validatePassword, validateCode} from "@/utils/validation";
 import SendCodeBtn from "@/components/pc/login/sendCodeBtn.vue";
-import { useRoute } from 'vue-router';
+import {useRoute} from 'vue-router';
 import router from "@/router/index";
-import { useUserStore } from "@/store/user";
+import {useUserStore} from "@/store/user";
 import Cookies from 'js-cookie';
 
 // 获取路由对象
@@ -155,10 +164,10 @@ const isZ = ref(false);
 const currentComponent = ref('UserAndPassword');
 
 // 注册
-const username = ref('555');
-const email = ref('1097260541@qq.com');
+const username = ref('');
+const email = ref('');
 const code = ref('');
-const password = ref('12345678');
+const password = ref('');
 const usernameError = ref('');
 const emailError = ref('');
 const codeError = ref('');
@@ -175,20 +184,20 @@ const emailError0 = ref('');
 const codeError0 = ref('');
 
 if (action === 'Login') {
-    isTxr.value =!isTxr.value;
-    isHidden.value =!isHidden.value;
-    isTxl.value =!isTxl.value;
-    isZ.value =!isZ.value;
+    isTxr.value = !isTxr.value;
+    isHidden.value = !isHidden.value;
+    isTxl.value = !isTxl.value;
+    isZ.value = !isZ.value;
 } else if (action === 'Register') {
 } else {
     router.push('/');
 }
 
 const changeForm = () => {
-    isTxr.value =!isTxr.value;
-    isHidden.value =!isHidden.value;
-    isTxl.value =!isTxl.value;
-    isZ.value =!isZ.value;
+    isTxr.value = !isTxr.value;
+    isHidden.value = !isHidden.value;
+    isTxl.value = !isTxl.value;
+    isZ.value = !isZ.value;
 };
 
 const items = ref(['用户密码', '邮箱验证', '邮箱密码']);
@@ -234,6 +243,8 @@ const onLogin = async () => {
                 const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
+                const userRole = getUserRole();
+                updateRoutesByDevice(userRole);
                 ElMessage.success('登录成功');
                 history.go(-1);
             } catch (error) {
@@ -260,6 +271,8 @@ const onLogin = async () => {
                 const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
+                const userRole = getUserRole();
+                updateRoutesByDevice(userRole);
                 ElMessage.success('登录成功');
             } catch (error) {
                 console.error('邮箱验证码登录失败', error);
@@ -285,6 +298,8 @@ const onLogin = async () => {
                 const data1 = res.data;
                 console.log(data1)
                 userStore.setUserData(data1);
+                const userRole = getUserRole();
+                updateRoutesByDevice(userRole);
                 ElMessage.success('登录成功');
             } catch (error) {
                 console.error('邮箱密码登录失败', error);
@@ -403,6 +418,7 @@ onMounted(() => {
     width: 100%;
     height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     font-size: 12px;
@@ -422,27 +438,35 @@ onMounted(() => {
         overflow: hidden;
     }
 
+    .copyright {
+        margin-top: 60px;
+
+        p {
+            text-align: center;
+        }
+    }
+
     /* 设置响应式 */
     @media (max-width: 1200px) {
-        .shell {
+        .LoginAndRegister-div {
             transform: scale(0.7);
         }
     }
 
     @media (max-width: 1000px) {
-        .shell {
+        .LoginAndRegister-div {
             transform: scale(0.6);
         }
     }
 
     @media (max-width: 800px) {
-        .shell {
+        .LoginAndRegister-div {
             transform: scale(0.5);
         }
     }
 
     @media (max-width: 600px) {
-        .shell {
+        .LoginAndRegister-div {
             transform: scale(0.4);
         }
     }

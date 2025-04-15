@@ -2,13 +2,13 @@
     <div class="carousel-container">
         <div class="carousel">
             <div class="carousel-item" ref="target">
-                <img :src="imageUrlArray[currentIndex]" alt="carousel image"/>
+                <img :src="server_URL + imageUrlArray[currentIndex]" alt="carousel image"/>
                 <!-- 蒙层小滑块 -->
                 <div class="layer" :style="{ left: `${left}px`, top: `${top}px` }" v-show="!isOutside"></div>
                 <!-- 放大镜大图 -->
                 <div class="large" :style="[
       {
-        backgroundImage: `url(${imageUrlArray[currentIndex]})`,
+        backgroundImage: `url(${server_URL + imageUrlArray[currentIndex]})`,
         backgroundPositionX: `${positionX}px`,
         backgroundPositionY: `${positionY}px`,
       },
@@ -25,7 +25,7 @@
                 <div class="thumbnails" :style="{ transform: `translateX(${-thumbnailIndex * thumbnailWidth}px) ` }">
                     <div v-for="(item, index) in imageUrlArray" :key="index"
                          :class="['thumbnail', index === currentIndex? 'active' : '']" @click="currentIndex = index">
-                        <img :src="item" alt="thumbnail image"/>
+                        <img :src="server_URL + item" alt="thumbnail image"/>
                     </div>
                 </div>
             </div>
@@ -42,6 +42,7 @@
 import {computed, ref, watch} from 'vue';
 import {ArrowLeft, ArrowRight} from "@element-plus/icons-vue";
 import {useMouseInElement} from '@vueuse/core'
+import {server_URL} from "@/urlConfig.js";
 
 
 // 接收父组件传递的图片数组

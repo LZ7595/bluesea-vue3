@@ -1,58 +1,12 @@
 <template>
     <div class="chat-container">
-        <!-- 左侧用户列表 -->
-        <div class="left-side" :class="{'open': switchActive }">
-            <div class="search-wrapper">
-                <el-input
-                        v-model="searchUserName"
-                        placeholder="搜索用户（回车确认）"
-                        @keydown.enter="searchUserForFormAction"
-                ></el-input>
-            </div>
-            <el-scrollbar class="user-list-scroll">
-                <el-row>
-                    <el-col
-                            :span="24"
-                            v-for="form in messageForm"
-                            :key="form.send_user.id"
-                            @click="chooseUser(form.send_user)"
-                            class="user-item"
-                    >
-                        <div class="user-avatar-wrapper">
-                            <div :class="{ 'online-dot': form.is_online }"></div>
-                            <el-badge
-                                    :value="form.no_read_message_length"
-                                    class="message-badge"
-                                    v-if="form.no_read_message_length > 0"
-                            >
-                                <img :src="server_URL + form.send_user.avatar" class="user-avatar">
-                            </el-badge>
-                            <img v-else :src="server_URL + form.send_user.avatar" class="user-avatar">
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">{{ form.send_user.username }}</div>
-                            <div class="user-last-message">{{ form.last_message }}</div>
-                        </div>
-                    </el-col>
-                </el-row>
-            </el-scrollbar>
-        </div>
-
         <!-- 右侧聊天区域 -->
         <div class="right-side">
             <div class="chat-header">
-                <span v-if="currentUser">{{ currentUser.username }}</span>
-                <span v-else>请选择聊天对象</span>
+                <span @click="goBack"><el-icon><ArrowLeft /></el-icon></span>
+                <span>客服</span>
             </div>
             <el-scrollbar class="chat-messages" ref="messageContainer">
-                <div @click="switchActiveChange" class="switch-action" :class="{ 'active' : switchActive}">
-                    <el-icon v-if="!switchActive">
-                        <ArrowRight/>
-                    </el-icon>
-                    <el-icon v-else>
-                        <ArrowLeft/>
-                    </el-icon>
-                </div>
                 <div
                         v-for="message in messages"
                         :key="message.handle"
@@ -63,7 +17,7 @@
                     }"
                 >
                     <img
-                            :src="message.send_user === loginUser.id ? server_URL + loginUser.avatar : server_URL + currentUser?.avatar"
+                            :src="message.send_user === loginUser.id ? server_URL + loginUser.avatar : server_URL + '/icon/sevice.jpg'"
                             class="message-avatar"
                     >
                     <div class="message-content">
@@ -91,8 +45,10 @@
                 </div>
             </el-scrollbar>
             <div class="chat-input">
-                <el-button class="img-btn" @click="showEmojiPicker = !showEmojiPicker" link :disabled="!currentUser">😀</el-button>
-                <el-button class="img-btn" :icon="Picture" @click="openFileInput" link :disabled="!currentUser"></el-button>
+                <el-button class="img-btn" @click="showEmojiPicker = !showEmojiPicker" link :disabled="!currentUser">😀
+                </el-button>
+                <el-button class="img-btn" :icon="Picture" @click="openFileInput" link
+                           :disabled="!currentUser"></el-button>
                 <el-input
                         v-model="newMessage.content"
                         placeholder="输入消息..."
@@ -119,8 +75,8 @@
 <script setup>
 import {ref, onMounted, onBeforeUnmount, nextTick, watch} from 'vue';
 import {ElMessage, ElScrollbar} from 'element-plus';
-import {Picture, ArrowRight, ArrowLeft} from '@element-plus/icons-vue';
-import {findMessageBySendUserAndReceiveUser, searchUserForForm} from '@/request/message';
+import {ArrowLeft, Picture} from '@element-plus/icons-vue';
+import {findMessageBySendUserAndReceiveUser} from '@/request/message';
 import {sendMessageTo} from '@/request/webSocketApi.js';
 import websocket from '@/utils/webSocket.js';
 import EmojiPicker from '@/components/pc/common/EmojiPicker.vue';
@@ -130,16 +86,14 @@ import {server_URL} from "@/urlConfig.js";
 const currentUser = ref(null);
 const loginUser = ref(JSON.parse(localStorage.getItem('UserData')) || {});
 const messages = ref([]);
-const messageForm = ref([]);
 const newMessage = ref({content: ''});
-const searchUserName = ref('');
 const messageContainer = ref(null);
 const isSending = ref(false);
 const reconnectInterval = 5000;
 let reconnectTimer = null;
 const showEmojiPicker = ref(false);
 const fileInput = ref(null);
-const switchActive = ref(false);
+
 
 const getImageSrc = (content) => {
     if (content && (content.startsWith('blob:') || content.startsWith('data:'))) {
@@ -147,9 +101,6 @@ const getImageSrc = (content) => {
     }
     return server_URL + content;
 };
-const switchActiveChange = () => {
-    switchActive.value = !switchActive.value;
-}
 // 格式化时间
 const formatTime = (timeStr) => {
     const messageDate = new Date(timeStr);
@@ -190,7 +141,6 @@ const formatTime = (timeStr) => {
     const day = messageDay.toString().padStart(2, '0');
     return `${messageYear}-${month}-${day} ${hours}:${minutes}`;
 };
-
 // 获取历史消息
 const fetchMessages = async (userId) => {
     if (!userId || !loginUser.value?.id) return;
@@ -203,6 +153,10 @@ const fetchMessages = async (userId) => {
     }
 };
 
+const goBack  = () => {
+    history.go(-1)
+}
+
 const sendWebSocketMessage = (message) => {
     const ws = websocket.getWebSocket();
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -212,7 +166,6 @@ const sendWebSocketMessage = (message) => {
         ElMessage.error('消息发送失败，连接已断开');
     }
 };
-
 // 发送消息
 const sendMessage = async () => {
     if (!validateMessage()) return;
@@ -281,66 +234,20 @@ const handleSendError = (message) => {
 const handleReceivedMessage = (event) => {
     try {
         const message = JSON.parse(event.data);
-
         // 添加到消息列表
         if (message.receive_user === loginUser.value.id) {
             messages.value.push(message);
             nextTick(scrollToBottom);
         }
 
-        // 更新用户列表的最后一条消息
-        const targetUserId = message.send_user === loginUser.value.id
-            ? message.receive_user
-            : message.send_user;
-        const targetUserForm = messageForm.value.find(
-            form => form.send_user.id === targetUserId
-        );
-        if (targetUserForm) {
-            targetUserForm.last_message = message.content;
-            targetUserForm.create_time = message.create_time;
-            targetUserForm.no_read_message_length = (targetUserForm.no_read_message_length || 0) + 1;
+        // 更新状态
+        const index = messages.value.findIndex(m => m.handle === message.handle);
+        if (index !== -1) {
+            messages.value[index].status = 'sent';
         }
     } catch (error) {
         console.error('消息解析失败:', error);
     }
-};
-
-// 搜索用户列表
-const searchUserForFormAction = async () => {
-    if (!loginUser.value?.id) {
-        ElMessage.error('请先登录');
-        return;
-    }
-
-    try {
-        const res = await searchUserForForm(loginUser.value.id, searchUserName.value);
-        const filtered = res.filter(form =>
-            form.send_user &&
-            form.send_user.id !== loginUser.value.id
-        );
-
-        // 去重
-        const uniqueForms = [];
-        const seenIds = new Set();
-        filtered.forEach(form => {
-            if (!seenIds.has(form.send_user.id)) {
-                uniqueForms.push(form);
-                seenIds.add(form.send_user.id);
-            }
-        });
-
-        messageForm.value = uniqueForms;
-    } catch (error) {
-        ElMessage.error('用户搜索失败');
-    }
-};
-
-// 选择用户
-const chooseUser = (user) => {
-    currentUser.value = user;
-    const form = messageForm.value.find(f => f.send_user.id === user.id);
-    if (form) form.no_read_message_length = 0;
-    fetchMessages(user.id);
 };
 
 // 滚动到底部
@@ -432,9 +339,11 @@ const openFileInput = () => {
 onMounted(async () => {
     if (loginUser.value?.id) {
         await connectWebSocket(loginUser.value.id);
-        searchUserForFormAction();
+        // 假设用户端直接与客服聊天，客服 ID 可以通过接口获取或者硬编码
+        const customerServiceId = 1110000000;
+        currentUser.value = {id: customerServiceId, username: '客服'};
+        fetchMessages(customerServiceId);
     }
-    watch(messages, scrollToBottom, {deep: true});
 });
 
 onBeforeUnmount(() => {
@@ -449,83 +358,6 @@ onBeforeUnmount(() => {
     background: #f5f6fa;
     overflow: hidden;
 
-    .left-side {
-        width: 280px;
-        border-right: 1px solid #e8e8e8;
-        background: white;
-        z-index: 7;
-        display: none;
-        transform: translateX(calc(-280px));
-        transition: transform 0.3s;
-
-        .search-wrapper {
-            padding: 16px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-
-        .user-list-scroll {
-            height: calc(100vh - 212px);
-
-            .user-item {
-                padding: 12px;
-                cursor: pointer;
-                transition: background 0.2s;
-                display: flex;
-
-                &:hover {
-                    background: #f8f9fa;
-                }
-
-                .user-avatar-wrapper {
-                    position: relative;
-                    display: inline-block;
-                    margin-right: 12px;
-                }
-
-                .online-dot {
-                    position: absolute;
-                    bottom: 2px;
-                    right: 2px;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    background: #52c41a;
-                    border: 2px solid white;
-                }
-
-                .user-avatar {
-                    max-width: 40px;
-                    max-height: 40px;
-                    width: 10vw;
-                    height: 10vw;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-
-                .user-details {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-around;
-                    vertical-align: top;
-                    max-width: calc(100% - 60px);
-                }
-
-                .user-name {
-                    font-weight: 500;
-                    color: #333;
-                }
-
-                .user-last-message {
-                    color: #666;
-                    font-size: 12px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            }
-        }
-    }
-
     .right-side {
         display: flex;
         flex-direction: column;
@@ -536,36 +368,25 @@ onBeforeUnmount(() => {
             border-bottom: 1px solid #e8e8e8;
             font-weight: 500;
             background: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            span{
+                height: 16px;
+                display: flex;
+                align-items:center;
+
+                .el-icon{
+                    cursor: pointer;
+                }
+            }
         }
 
         .chat-messages {
             flex: 1;
             padding: 16px;
             background: #fafafa;
-
-            .switch-action {
-                position: absolute;
-                width: 15px;
-                height: 60px;
-                background: white;
-                border: 1px solid #5a99dc;
-                border-left: none;
-                left: 0;
-                top: 10px;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-                opacity: 0.4;
-                transition: opacity 0.2s, left 0.2s;
-
-                &:hover {
-                    opacity: 1;
-                }
-            }
-
-            .switch-action.active {
-                opacity: 1;
-            }
         }
 
         .messageBox {
@@ -639,12 +460,14 @@ onBeforeUnmount(() => {
                     background: #f5f5f5;
                     opacity: 0.6;
                 }
-                &:active{
+
+                &:active {
                     background: #f5f5f5;
                     opacity: 0.6;
                 }
             }
-            .el-button +.el-button {
+
+            .el-button + .el-button {
                 margin-left: 0;
             }
         }
@@ -686,12 +509,6 @@ onBeforeUnmount(() => {
     .chat-container {
         height: calc(100vh - 100px);
 
-        .left-side {
-            height: calc(100vh - 100px);
-            display: block;
-            transform: translateX(0);
-        }
-
         .right-side {
             .switch-action {
                 display: none;
@@ -704,26 +521,9 @@ onBeforeUnmount(() => {
     .chat-container {
         height: calc(100vh - 1.953vw - 80px);
 
-        .left-side {
-            position: fixed;
-            height: calc(100vh - 1.953vw - 80px);
-            display: block;
-        }
-
-        .left-side.open {
-            transform: translateX(0);
-        }
-
         .right-side {
-            .switch-action {
-                display: flex;
-            }
 
-            .switch-action.active {
-                left: 280px;
-            }
-
-            .chat-input{
+            .chat-input {
                 padding: 1.5vw;
             }
         }

@@ -1,4 +1,5 @@
 <template>
+    <div class="emoji-picker-div">
     <div class="emoji-picker">
     <span
             v-for="emoji in emojis"
@@ -6,6 +7,7 @@
             @click="$emit('select-emoji', emoji)"
             class="emoji-item"
     >{{ emoji }}</span>
+    </div>
     </div>
 </template>
 
@@ -29,7 +31,6 @@ export default {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    width: 240px;
 }
 
 .emoji-item {

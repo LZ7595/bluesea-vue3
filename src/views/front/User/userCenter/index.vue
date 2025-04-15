@@ -32,6 +32,23 @@
                             />
                         </div>
                         <div class="user-info-row">
+                            <label for="avatar">头像：</label>
+
+                            <el-upload
+                                    action="#"
+                                    :show-file-list="false"
+                                    :auto-upload="false"
+                                    @change="handleFileChange"
+                            >
+                                <template #trigger>
+                                    <el-button type="primary">选择图片</el-button>
+                                </template>
+                            </el-upload>
+                            <el-image v-if="avatar" :src="getImageSrc(avatar)" alt="预览图片"
+                                      :preview-src-list="[getImageSrc(avatar)]"
+                                      style="width: 80px; height: 80px; border: 1px solid #ccc; border-radius: 50%; margin-left: 10px; display: block;"/>
+                        </div>
+                        <div class="user-info-row">
                             <el-button type="primary" @click="updateUserInfo">保存</el-button>
                         </div>
                     </div>
@@ -39,7 +56,7 @@
                         <el-card shadow="always">
                             <div class="card-info">
                                 <div class="card-left">
-                                    <el-avatar :icon="UserFilled" :src="userDetail.avatar" :size="70"/>
+                                    <el-avatar :icon="UserFilled" :src="server_URL + userDetail.avatar" :size="70"/>
                                 </div>
                                 <div class="card-right">
                                     <div class="card-right-item-name">
@@ -73,11 +90,13 @@
                     <div class="security-row">
                         <span>绑定邮箱：</span>
                         <span>{{ encryptedEmail }}</span>
-                        <router-link :to="{ path: '/pc/security', query: { action: 'changeEmail' } }">换绑邮箱</router-link>
+                        <router-link :to="{ path: '/pc/security', query: { action: 'changeEmail' } }">换绑邮箱
+                        </router-link>
                     </div>
                     <div class="security-row">
                         <span>登录密码：</span>
-                        <router-link :to="{ path: '/pc/security', query: { action: 'changePassword' } }">修改密码</router-link>
+                        <router-link :to="{ path: '/pc/security', query: { action: 'changePassword' } }">修改密码
+                        </router-link>
                     </div>
                 </div>
             </el-tab-pane>
@@ -87,14 +106,30 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, watch} from 'vue';
+import {useRoute} from 'vue-router';
 import userRes from '@/request/user';
 import {getCookie, parseJwt} from "@/utils/cookieJwt";
 import {ElMessage} from "element-plus";
 import {UserFilled} from '@element-plus/icons-vue';
 import {encryptPhone, encryptEmail} from "@/utils/encrypt";
+import {server_URL} from "@/urlConfig.js";
+import bannerBackApi from "@/request/back/banner.js";
 
-const activeName = ref('first')
+// 提前获取路由对象
+const route = useRoute();
+
+// 定义当前激活的 tab 名称，使用可选链操作符
+const activeName = ref(route?.query?.tab || 'first');
+
+// 监听路由变化
+watch(
+    () => route.query,
+    (newQuery) => {
+        activeName.value = newQuery?.tab || 'first';
+    },
+    {immediate: true}
+);
 const options = [
     {
         value: '男',
@@ -114,6 +149,9 @@ const userDetail = ref({});
 const birthday = ref(null);
 const name = ref(null);
 const gender = ref(null);
+const avatar = ref(null);
+const selectedFile = ref(null);
+
 const userStore = ref(JSON.parse(localStorage.getItem('token')));
 // 从 cookie 中获取 JWT 令牌
 const jwtToken = getCookie('token');
@@ -130,19 +168,32 @@ const getUserDetail = async (id) => {
         birthday.value = res.birthday;
         name.value = res.username;
         gender.value = res.gender;
+        avatar.value = res.avatar;
     } catch (err) {
         console.log(err)
     }
 }
-const validate = (name, gender, birthday) => {
-    if (!name || !gender || !birthday) {
+const handleFileChange = (file, fileList) => {
+    console.log(fileList);
+    console.log(file);
+    if (file.status === 'ready') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            avatar.value = e.target.result;
+            selectedFile.value = file.raw;
+        };
+        reader.readAsDataURL(file.raw);
+    }
+};
+const validate = (name, gender, birthday,avatar) => {
+    if (!name || !gender || !birthday ||!avatar) {
         ElMessage({
             message: '请填写完整信息',
             type: 'warning',
         })
         return false;
     }
-    if (name === userDetail.value.username && gender === userDetail.value.gender && birthday === userDetail.value.birthday) {
+    if (name === userDetail.value.username && gender === userDetail.value.gender && birthday === userDetail.value.birthday && avatar === userDetail.value.avatar) {
         ElMessage({
             message: '没有修改',
             type: 'warning',
@@ -152,15 +203,27 @@ const validate = (name, gender, birthday) => {
     return true;
 }
 const updateUserInfo = async () => {
-    if (!validate(name.value, gender.value, birthday.value)) {
+    if (!validate(name.value, gender.value, birthday.value, avatar.value)) {
         return;
     }
+    if (selectedFile.value) {
+        console.log(selectedFile.value)
+        const fileFormData = new FormData();
+        fileFormData.append('file', selectedFile.value);
+
+        // 发送文件上传请求
+        const uploadResponse = await userRes.uploadFiles(fileFormData);
+        console.log(uploadResponse);
+        avatar.value = uploadResponse.data;
+    }
+
     try {
         const res = await userRes.updateUserInfo(
             userId,
             name.value,
             gender.value,
-            birthday.value
+            birthday.value,
+            avatar.value
         );
         console.log(res)
         getUserDetail(userId);
@@ -190,6 +253,12 @@ onMounted(() => {
     getUserDetail(userId);
     getSecurityInfo(userId);
 });
+const getImageSrc = (url) => {
+    if (url && (url.startsWith('blob:') || url.startsWith('data:'))) {
+        return url;
+    }
+    return server_URL + url;
+};
 </script>
 
 <style scoped>

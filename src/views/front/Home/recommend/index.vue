@@ -5,7 +5,9 @@
                 <div class="pc-home-content-benner">
                     <el-carousel height="462.5px">
                         <el-carousel-item v-for="(item,index) in bennerList" :key="index">
-                            <img :src="item" :alt="index" class="benner-img"/>
+                            <router-link :to="`/pc/productDetails/${item.product_id}`">
+                                <img :src="server_URL + item.image" :alt="index" class="benner-img"/>
+                            </router-link>
                         </el-carousel-item>
                     </el-carousel>
                 </div>
@@ -13,7 +15,7 @@
             <div class="pc-home-content-top-right">
                 <div class="pc-home-content-FlashSale">
                     <div class="FlashSale-title">
-                        <img src="/icon/时间.png" class="FlashSale-title-img" alt="时间"/>
+                        <img :src="server_URL + '/icon/时间.png'" class="FlashSale-title-img" alt="时间"/>
                         <h2 class="FlashSale-title-font">限时
                             <o>抢</o>
                             购
@@ -24,7 +26,7 @@
                             <li class="FlashSale-content-item" v-for="(item,index) in FlashSaleList" :key="index">
                                 <router-link :to="`/pc/productDetails/${item.product_id}`">
                                     <div class="FlashSale-content-item-content">
-                                        <img :src="item.product_main_image" :alt="item.product_name"
+                                        <img :src="server_URL + item.product_main_image" :alt="item.product_name"
                                              class="FlashSale-content-item-img"/>
                                         <div class="FlashSale-content-item-info">
                                             <h3 class="FlashSale-content-item-info-title">{{ item.product_name }}</h3>
@@ -43,7 +45,7 @@
                 <div class="pc-home-content-top-right-bottom">
                     <div class="pc-home-content-new">
                         <div class="new-title">
-                            <img src="/icon/new.png" alt="新品" class="new-title-img"/>
+                            <img :src="server_URL +'/icon/new.png'" alt="新品" class="new-title-img"/>
                             <h2 class="new-title-font">
                                 <o>新</o>
                                 品上架
@@ -54,7 +56,7 @@
                                 <li class="new-content-item" v-for="(item,index) in newList" :key="index">
                                     <router-link :to="`/pc/productDetails/${item.product_id}`">
                                         <div class="new-content-item-content">
-                                            <img :src="item.product_main_image" :alt="item.product_name"
+                                            <img :src="server_URL + item.product_main_image" :alt="item.product_name"
                                                  class="new-content-item-img"/>
                                             <div class="new-content-item-info">
                                                 <h3 class="new-content-item-info-title">{{ item.product_name }}</h3>
@@ -72,7 +74,7 @@
                         </div>
                     </div>
                     <div class="pc-home-content-Promotional">
-                        <img src="/icon/宣传图.png" alt="宣传图" class="Promotional-img">
+                        <img :src="server_URL + '/icon/宣传图.png'" alt="宣传图" class="Promotional-img">
                     </div>
                 </div>
             </div>
@@ -323,8 +325,9 @@ import GoodQuality from "@/components/pc/product/goodQuality.vue";
 import GoodItem from "@/components/pc/product/goodItem.vue";
 import request from "@/request/request";
 import {getFirstImageUrl, getImageUrlArray} from "@/utils/imgArray.js";
+import {server_URL} from "@/urlConfig.js";
 
-const bennerList = ref(["/benner/轮播1.jpg", "/benner/轮播1.jpg", "/benner/轮播1.jpg"])
+const bennerList = ref([{image: "/banner/轮播1.jpg"}, {image: "/banner/轮播1.jpg"}, {image: "/banner/轮播1.jpg"}])
 const FlashSaleList = ref([
     {
         product_main_image: "/goods/findx7海阔天空.png",
@@ -376,6 +379,19 @@ const newList = ref([
     },
 ]);
 const goodItemList = ref([])
+
+const getBannerList = async () => {
+    try {
+        const res = await request({
+            url: "/api/banner",
+            method: "get",
+        });
+        console.log(res.data);
+        bennerList.value = res.data;
+    } catch (err) {
+        console.log(err);
+    }
+};
 
 const getRecommendList = async () => {
     try {
@@ -433,5 +449,6 @@ onMounted(() => {
     getNewList();
     getFlashSalesList();
     getRecommendList();
+    getBannerList();
 });
 </script>

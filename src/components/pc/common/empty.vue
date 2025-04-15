@@ -1,12 +1,13 @@
 <template>
     <div class="shop-car-empty">
-        <img src='/icon/shop-car-empty.png' alt="empty" />
+        <img :src="server_URL +'/icon/shop-car-empty.png'" alt="empty" />
         <div>{{ title }}</div>
     </div>
 </template>
 
 <script setup>
 import { defineProps } from 'vue';
+import {server_URL} from "@/urlConfig.js";
 // 定义组件的 props
 const props = defineProps({
     title: {

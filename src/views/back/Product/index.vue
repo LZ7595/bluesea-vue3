@@ -167,7 +167,7 @@
 
                         <template #file="{ file }">
                             <div>
-                                <img class="el-upload-list__item-thumbnail" :src="file.url" alt=""/>
+                                <img class="el-upload-list__item-thumbnail" :src="getImageSrc(file)" alt=""/>
                                 <span class="el-upload-list__item-actions">
           <span
                   class="el-upload-list__item-preview"
@@ -275,11 +275,21 @@ const disableds = ref(false);
 const isAdd = ref(false); // 添加标志变量
 
 const handlePictureCardPreview = (file) => {
-    dialogImageUrl.value = file.url;
+    if (file.url && (file.url.startsWith('blob:') || file.url.startsWith('data:'))) {
+        dialogImageUrl.value = file.url;
+    } else {
+        dialogImageUrl.value = server_URL + file.url;
+    }
     dialogVisible.value = true;
-    console.log(file);
-}
+};
 
+// 根据 file.url 判断是否为 blob 或 data 格式，返回正确的图片 src
+const getImageSrc = (file) => {
+    if (file.url && (file.url.startsWith('blob:') || file.url.startsWith('data:'))) {
+        return file.url;
+    }
+    return server_URL + file.url;
+};
 const handleDownload = (file) => {
     console.log(file);
 }
@@ -293,7 +303,7 @@ const sortField = ref('create_time');
 const sortOrder = ref('DESC');
 // 当前页码，初始为第一页
 const currentPage = ref(1);
-// 每页显示的商品数量，初始为 15 条
+// 每页显示的商品数量，初始为 20 条
 const pageSize = ref(20);
 // 商品的总记录数，初始为 0
 const total = ref(0);
@@ -678,6 +688,7 @@ const SearchAction = async () => {
 };
 
 import {debounce} from 'lodash-es';
+import {server_URL} from "@/urlConfig.js";
 
 const debouncedSearch = debounce(SearchAction, 300);
 const handleSizeChange = (newSize) => {

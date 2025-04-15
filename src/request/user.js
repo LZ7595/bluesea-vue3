@@ -13,14 +13,15 @@ const userRes = {
             return Promise.reject(err);
         });
     },
-    updateUserInfo: (id, name, gender, birthday) => {
+    updateUserInfo: (id, name, gender, birthday,avatar) => {
         return request({
             url: `/api/users/${id}`,
             method: 'put',
             params: {
                 name,
                 gender,
-                birthday
+                birthday,
+                avatar
             }
         }).then(res => {
             if (res.status === 200) {
@@ -29,6 +30,20 @@ const userRes = {
         }).catch(err => {
             return Promise.reject(err);
         });
+    },
+    uploadFiles: (fileFormData) => {
+        try {
+            return request({
+                url: `/api/avatar/upload`,
+                method: 'post',
+                data: fileFormData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+        } catch (error) {
+            throw new Error(error.response?.data?.message || '请求出错');
+        }
     },
     getSecurityInfo: (user_id) => {
         return request({
