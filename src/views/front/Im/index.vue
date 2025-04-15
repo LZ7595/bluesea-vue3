@@ -78,7 +78,7 @@ import {ElMessage, ElScrollbar} from 'element-plus';
 import {ArrowLeft, Picture} from '@element-plus/icons-vue';
 import {findMessageBySendUserAndReceiveUser} from '@/request/message';
 import {sendMessageTo} from '@/request/webSocketApi.js';
-import websocket from '@/utils/webSocket.js';
+import websocket from '@/utils/websocket.js';
 import EmojiPicker from '@/components/pc/common/EmojiPicker.vue';
 import {server_URL} from "@/urlConfig.js";
 
