@@ -120,10 +120,10 @@ jdk不低于17，MySQL 5.7或者8，node.js版本18以上，maven版本建议3.8
 
 5. 恢复sql数据。在mysql下依次执行如下命令：
 
-```
-mysql> use blueseaplus;
-mysql> source D:/xxx/xxx/xxx.sql;
-```
+   ```
+   mysql> use blueseaplus;
+   mysql> source D:/xxx/xxx/xxx.sql;
+   ```
 
 6. 启动后端服务：点击IDEA顶部run按钮
 
