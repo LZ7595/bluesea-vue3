@@ -34,7 +34,7 @@ bluesea-springboot3：[LZ7595/bluesea-springboot3 · GitHub](https://github.com/
 
 ## 系统结构图
 
-![](\mark\2025-04-16-11-49-49-image.png)
+![](mark/2025-04-16-11-49-49-image.png)
 
 ## 功能介绍
 
@@ -151,8 +151,8 @@ mysql> source D:/xxx/xxx/xxx.sql;
 
 首页
 
-![](\mark\2025-04-16-13-48-37-image.png)
+![](mark/2025-04-16-13-48-37-image.png)
 
 后台页面
 
-![](\mark\2025-04-16-13-48-03-image.png)
+![](mark/2025-04-16-13-48-03-image.png)
